@@ -52,7 +52,11 @@ class Player():
             print(w)
             if w.colliderect(self.rect):
                 # If colliding, reset position and velocity
-                
+                # Temporary collision code, will fix
+                if self.rect.bottom > w.top and self.last_pos.y + self.rect.height <= w.top: self.rect.bottom = w.top
+                if self.rect.top < w.bottom and self.last_pos.y >= w.bottom: self.rect.top = w.bottom
+                if self.rect.right > w.left and self.last_pos.x + self.rect.width <= w.left: self.rect.right = w.left
+                if self.rect.left < w.right and self.last_pos.x >= w.right: self.rect.left = w.right
                 self.pos.x = self.rect.x
                 self.pos.y = self.rect.y
                 self.vel.y = 0
