@@ -48,6 +48,7 @@ class Player():
         if self.rect.top > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
             #self.pos.y -= self.vel.y
             self.pos.y *= utils.SCALE["height"]
+            #checks if the player is still out of the world after the failsafe
             if self.pos.y > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
                 self.rect.y = self.screen.get_height() - self.rect.height # pyright: ignore[reportOptionalMemberAccess]
                 while self.rect.collideobjectsall(world):

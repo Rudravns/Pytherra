@@ -22,7 +22,7 @@ class Main:
         self.player = player.Player((0, 0), 80) #Pos, Size
 
         # World
-        self.world = world.World((0, self.screen.get_height() - 100), (self.screen.get_width(), 100)) #Pos, Size
+        self.world = world.World()
 
     def run(self):
         while True:
@@ -45,6 +45,9 @@ class Main:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         return
+                    if event.key == pg.K_r:
+                        self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
+                        self.resize()
                 
                 if event.type == pg.VIDEORESIZE:
                         if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
@@ -64,6 +67,7 @@ class Main:
       utils.draw_text(self.screen, f"Player velocity: {round(self.player.vel.x, 3)}, {round(self.player.vel.y, 3)}", 40, (255, 255, 255), (10, 120))
       utils.draw_text(self.screen, f"Jump: {self.player.jump}", 40, (255, 255, 255), (10, 160))
       utils.draw_text(self.screen, f"Collision: {self.player.collide}", 40, (255, 255, 255), (10, 200))
+      utils.draw_text(self.screen, f"Scale: {utils.SCALE}", 40, (255, 255, 255), (10, 240))
 
 
 
