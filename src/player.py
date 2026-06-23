@@ -36,8 +36,8 @@ class Player():
             self.vel.x += self.SPEED * dt
         if (key[pg.K_SPACE] or key[pg.K_UP] or key[pg.K_w]) and not self.jump:
             self.vel.y -= self.JUMP
-            self.jump = True
 
+        self.jump = True
         # Apply friction and gravity
         self.vel.x *= self.FRICTION
         self.pos.x += self.vel.x
@@ -48,7 +48,14 @@ class Player():
         if self.rect.top > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
             #self.pos.y -= self.vel.y
             self.pos.y *= utils.SCALE["height"]
-            #self.vel.y = 0
+            if self.pos.y > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
+                self.rect.y = self.screen.get_height() - self.rect.height # pyright: ignore[reportOptionalMemberAccess]
+                while self.rect.collideobjectsall(world):
+                    self.rect.y -= 1
+                
+                self.pos.y = self.rect.y
+
+            self.vel.y = 0
         
         self.collide = ""
         self.rect.y = int(self.pos.y)
