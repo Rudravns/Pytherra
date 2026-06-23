@@ -15,6 +15,7 @@ class Player():
         self.FRICTION = 0.6 #World Dependent
         self.GRAVITY = 24 #World Dependent
         self.JUMP = 12
+        self.MAX_STEP = 20
         self.vel = pg.Vector2(0, 0)
         
         #base_stuff
@@ -50,10 +51,10 @@ class Player():
             #self.vel.y = 0
         
         self.collide = ""
-        self.rect.x = int(self.pos.x)
-        self.check_collision(world, (self.rect.x, None))
         self.rect.y = int(self.pos.y)
         self.check_collision(world, (None, self.rect.y))
+        self.rect.x = int(self.pos.x)
+        self.check_collision(world, (self.rect.x, None))
 
         self.last_pos = self.pos.copy()
 
@@ -87,8 +88,16 @@ class Player():
                         self.rect.left = w.right
                         self.collide = "right"
 
-                    self.vel.x = 0
                     self.pos.x = self.rect.x
+
+                    check = self.rect.bottom - w.top
+                    if (abs(check) >= 0 and abs(check) <= self.MAX_STEP) and not self.jump:
+                        self.rect.bottom = w.top
+                        self.rect.x += self.vel.x
+                        self.collide = "top"
+                        pass
+
+                    self.vel.x = 0
                 if (move[0] is None and move[1] is None) or (move[0] is not None and move[1] is not None): # Error in input, should not happen
                     raise ValueError("Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
     

@@ -7,7 +7,7 @@ import utils
 class World():
     def __init__(self, pos, size):
         self.pos = pg.Vector2(pos)
-        self.rect =[pg.Rect(self.pos[0], self.pos[1], size[0], size[1]), pg.Rect(400,500,200,50)]
+        self.rect =[pg.Rect(self.pos[0], self.pos[1], size[0], size[1]), pg.Rect(200,500,200,50), pg.Rect(400, self.pos[1] - 20, 200, 200), pg.Rect(600, self.pos[1] - 40, 200, 200), pg.Rect(800, self.pos[1] - 60, 200, 200)]
         self.base_rect = self.rect.copy() # For resizing
         self.screen = pg.display.get_surface()
         
