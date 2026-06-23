@@ -12,7 +12,7 @@ class Player():
         self.screen = pg.display.get_surface()
 
         self.SPEED = 500
-        self.FRICTION = 0.6 #Wrld Dependent
+        self.FRICTION = 0.6 #World Dependent
         self.GRAVITY = 24 #World Dependent
         self.JUMP = 12
         self.vel = pg.Vector2(0, 0)
@@ -25,17 +25,20 @@ class Player():
         
         self.jump = True
 
+        #debug
+        self.collide = ""
+
     def update(self, key, world: list[pg.Rect], dt):
         if key[pg.K_LEFT] or key[pg.K_a]:
-            self.vel.x -= self.SPEED
+            self.vel.x -= self.SPEED * dt
         if key[pg.K_RIGHT] or key[pg.K_d]:
-            self.vel.x += self.SPEED
-        if (key[pg.K_SPACE] or key[pg.K_w]) and not self.jump:
+            self.vel.x += self.SPEED * dt
+        if (key[pg.K_SPACE] or key[pg.K_UP] or key[pg.K_w]) and not self.jump:
             self.vel.y -= self.JUMP
             self.jump = True
 
-        # Apply gravity
-        self.vel.x *= self.FRICTION * dt
+        # Apply friction and gravity
+        self.vel.x *= self.FRICTION
         self.pos.x += self.vel.x
         self.vel.y += self.GRAVITY * dt
         self.pos.y += self.vel.y
@@ -45,26 +48,49 @@ class Player():
             #self.pos.y -= self.vel.y
             self.pos.y *= utils.SCALE["height"]
             #self.vel.y = 0
-
         
+        self.collide = ""
+        self.rect.x = int(self.pos.x)
+        self.check_collision(world, (self.rect.x, None))
+        self.rect.y = int(self.pos.y)
+        self.check_collision(world, (None, self.rect.y))
+
+        self.last_pos = self.pos.copy()
+
+    def check_collision(self, world: list[pg.Rect], move: tuple):
         # Check for collision with the world
         for w in world:
             print(w)
             if w.colliderect(self.rect):
                 # If colliding, reset position and velocity
-                # Temporary collision code, will fix
-                if self.rect.bottom > w.top and self.last_pos.y + self.rect.height <= w.top: self.rect.bottom = w.top
-                if self.rect.top < w.bottom and self.last_pos.y >= w.bottom: self.rect.top = w.bottom
-                if self.rect.right > w.left and self.last_pos.x + self.rect.width <= w.left: self.rect.right = w.left
-                if self.rect.left < w.right and self.last_pos.x >= w.right: self.rect.left = w.right
-                self.pos.x = self.rect.x
-                self.pos.y = self.rect.y
-                self.vel.y = 0
-                self.last_pos = self.pos.copy()
-                self.jump = False
+                # Fixed collision (Happy)
+                if move[0] is None: # Vertical movement
+                    self.rect.y -= self.vel.y
 
-        self.rect.x = self.pos.x
-        self.rect.y = self.pos.y
+                    if self.vel.y > 0:
+                        self.rect.bottom = w.top
+                        self.jump = False
+                        self.collide = "top"
+                    elif self.vel.y < 0:
+                        self.rect.top = w.bottom
+                        self.collide = "bottom"
+                    
+                    self.vel.y = 0
+                    self.pos.y = self.rect.y
+                if move[1] is None: # Horizontal movement
+                    self.rect.x -= self.vel.x
+
+                    if self.vel.x > 0:
+                        self.rect.right = w.left
+                        self.collide = "left"
+                    elif self.vel.x < 0:
+                        self.rect.left = w.right
+                        self.collide = "right"
+
+                    self.vel.x = 0
+                    self.pos.x = self.rect.x
+                if (move[0] is None and move[1] is None) or (move[0] is not None and move[1] is not None): # Error in input, should not happen
+                    raise ValueError("Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
     
     def draw(self, hbox= False):
         pg.draw.ellipse(self.screen, (0, 128, 255), self.rect, 0) # pyright: ignore[reportArgumentType]

@@ -63,6 +63,7 @@ class Main:
       utils.draw_text(self.screen, f"Last Player Position: {self.player.rect.x}, {self.player.rect.y}", 40, (255, 255, 255), (10, 80))
       utils.draw_text(self.screen, f"Player velocity: {round(self.player.vel.x, 3)}, {round(self.player.vel.y, 3)}", 40, (255, 255, 255), (10, 120))
       utils.draw_text(self.screen, f"Jump: {self.player.jump}", 40, (255, 255, 255), (10, 160))
+      utils.draw_text(self.screen, f"Collision: {self.player.collide}", 40, (255, 255, 255), (10, 200))
 
 
 
