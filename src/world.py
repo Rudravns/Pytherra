@@ -12,15 +12,16 @@ class World():
             data = json.load(f)
         
         self.rect = self.get_rects(data["world"])
-        self.base_rect = self.rect.copy() # For resizing
+        self.base_rect = self.get_rects(data["world"]) # For resizing
         self.screen = pg.display.get_surface()
         
     def resize(self):
+        base_rect = self.base_rect.copy()
         for i, rect in enumerate(self.rect):
-            rect.x = self.base_rect[i].x * utils.SCALE["width"]
-            rect.y = self.base_rect[i].y * utils.SCALE["height"]
-            rect.width = self.base_rect[i].width * utils.SCALE["width"]
-            rect.height = self.base_rect[i].height * utils.SCALE["height"]
+            rect.x = base_rect[i].x * utils.SCALE["width"]
+            rect.y = base_rect[i].y * utils.SCALE["height"]
+            rect.width = base_rect[i].width * utils.SCALE["width"]
+            rect.height = base_rect[i].height * utils.SCALE["height"]
 
         return self.rect
 
@@ -35,7 +36,7 @@ class World():
         return rects
 
     def __str__(self):
-        return f"{self.rect}"
+        return f"{self.base_rect}"
 
 if __name__ == "__main__":
     pg.init()

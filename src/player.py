@@ -10,6 +10,7 @@ class Player():
         self.last_pos = self.pos.copy()
 
         self.screen = pg.display.get_surface()
+        self.prev_scale = {"width": 1.0, "height": 1.0, "overall": 1.0}
 
         self.SPEED = 500
         self.FRICTION = 0.6 #World Dependent
@@ -99,7 +100,7 @@ class Player():
                     self.pos.x = self.rect.x
 
                     check = self.rect.bottom - w.top
-                    if (abs(check) >= 0 and abs(check) <= self.MAX_STEP) and not self.jump:
+                    if (abs(check) >= 0 and abs(check) <= self.MAX_STEP * utils.SCALE["height"]) and not self.jump:
                         self.rect.bottom = w.top
                         self.rect.x += self.vel.x
                         self.collide = "top"
@@ -115,9 +116,16 @@ class Player():
     
     def resize(self):
         #self.base_rect = self.base_rect.copy()
+        check = False
+        for n in utils.SCALE:
+            if self.prev_scale[n] != utils.SCALE[n]: check = True
 
-        #self.rect.x = self.base_rect.x * utils.SCALE["width"]
-        #self.rect.y = self.base_rect.y * utils.SCALE["height"]
+        print(check)
+        if check:
+            self.rect.x = self.base_rect.x * utils.SCALE["width"]
+            self.rect.y = self.base_rect.y * utils.SCALE["height"]
+            for n in utils.SCALE:
+                self.prev_scale[n] = utils.SCALE[n]
         self.rect.width = self.base_rect.width * utils.SCALE["overall"]
         self.rect.height = self.base_rect.height * utils.SCALE["overall"]
 
