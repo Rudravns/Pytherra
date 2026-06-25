@@ -6,6 +6,7 @@ import player, world, utils
 class Main:
     def __init__(self):
         pg.init()
+        os.system('cls' if os.name == 'nt' else "cleatddddd")
         
         # Screen setup
         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
@@ -19,7 +20,7 @@ class Main:
         self.UI_DEBUG = True
 
         # Player
-        self.player = player.Player((0, 0), 80) #Pos, Size
+        self.player = player.Player((500, 400), 80) #Pos, Size
 
         # World
         self.world = world.World()
@@ -34,8 +35,9 @@ class Main:
             if self.UI_DEBUG: self.debug_UI()
 
             keys = pg.key.get_pressed()
-            self.player.update(keys, self.world.rect, self.dt)
             
+            self.update_movement(keys)
+
             self.draw()
 
             for event in pg.event.get():
@@ -54,7 +56,7 @@ class Main:
                         w, h = event.w, event.h
                         self.resize(w, h)
 
-            self.resize()
+        
             pg.display.update()
 
     def draw(self):
@@ -85,6 +87,24 @@ class Main:
         self.player.resize()
         self.world.resize()
 
+    def update_movement(self, keys):
+        old_x = self.player.pos.x
+        old_y = self.player.pos.y
+
+        self.player.update(keys, self.world.rect, self.dt)
+
+        dx = self.player.pos.x - old_x
+        dy = self.player.pos.y - old_y
+
+        # Move world opposite direction
+        self.world.move(-dx, -dy)
+
+        # Keep player fixed
+        self.player.pos.x = old_x
+        self.player.pos.y = old_y
+        self.player.rect.x = int(old_x)
+        self.player.rect.y = int(old_y)
+            
 
 
 if __name__ == "__main__":

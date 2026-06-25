@@ -70,11 +70,10 @@ class Player():
     def check_collision(self, world: list[pg.Rect], move: tuple):
         # Check for collision with the world
         for w in world:
-            print(w)
             if w.colliderect(self.rect):
                 # If colliding, reset position and velocity
                 # Fixed collision (Happy)
-                if move[0] is None: # Vertical movement
+                if move[0] is None and move[1] is not None: # Vertical movement
                     self.rect.y -= self.vel.y
 
                     if self.vel.y > 0:
@@ -87,7 +86,7 @@ class Player():
                     
                     self.vel.y = 0
                     self.pos.y = self.rect.y
-                if move[1] is None: # Horizontal movement
+                elif move[1] is None and move[0] is not None: # Horizontal movement
                     self.rect.x -= self.vel.x
 
                     if self.vel.x > 0:
@@ -107,25 +106,39 @@ class Player():
                         pass
 
                     self.vel.x = 0
-                if (move[0] is None and move[1] is None) or (move[0] is not None and move[1] is not None): # Error in input, should not happen
-                    raise ValueError("Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
+                else: # Error in input, should not happe
+                   
+                    raise ValueError(f"Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
     
     def draw(self, hbox= False):
         pg.draw.ellipse(self.screen, (0, 128, 255), self.rect, 0) # pyright: ignore[reportArgumentType]
         if hbox: pg.draw.rect(self.screen, 'red', self.rect, 2)  # pyright: ignore[reportArgumentType]
     
     def resize(self):
-        #self.base_rect = self.base_rect.copy()
         check = False
         for n in utils.SCALE:
             if self.prev_scale[n] != utils.SCALE[n]: check = True
 
-        print(check)
         if check:
-            self.rect.x = self.base_rect.x * utils.SCALE["width"]
-            self.rect.y = self.base_rect.y * utils.SCALE["height"]
+            # Calculate the ratio difference since the last resize
+            ratio_w = utils.SCALE["width"] / self.prev_scale["width"]
+            ratio_h = utils.SCALE["height"] / self.prev_scale["height"]
+
+            # Apply this ratio to the player's true position and velocity
+            self.pos.x *= ratio_w
+            self.pos.y *= ratio_h
+            self.vel.x *= ratio_w
+            self.vel.y *= ratio_h
+            
+            # Sync the rect coordinates
+            self.rect.x = int(self.pos.x)
+            self.rect.y = int(self.pos.y)
+
+            # Record the new scale for the next resize event
             for n in utils.SCALE:
                 self.prev_scale[n] = utils.SCALE[n]
+        
+        # We can still scale width/height via base_rect because the player's physical size is static relative to scale
         self.rect.width = self.base_rect.width * utils.SCALE["overall"]
         self.rect.height = self.base_rect.height * utils.SCALE["overall"]
 
