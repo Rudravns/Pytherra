@@ -96,14 +96,17 @@ class Main:
         dx = self.player.pos.x - old_x
         dy = self.player.pos.y - old_y
 
-        # Move world opposite direction
-        self.world.move(-dx, -dy)
+        if dx != 0 or dy != 0:
+            self.world.move(-dx, -dy)
 
-        # Keep player fixed
-        self.player.pos.x = old_x
-        self.player.pos.y = old_y
-        self.player.rect.x = int(old_x)
-        self.player.rect.y = int(old_y)
+            self.player.pos.x = old_x
+            self.player.pos.y = old_y
+
+            self.player.rect.x = int(old_x)
+            self.player.rect.y = int(old_y)
+
+            self.player.last_pos.x = old_x
+            self.player.last_pos.y = old_y
             
 
 

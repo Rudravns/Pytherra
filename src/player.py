@@ -110,9 +110,11 @@ class Player():
                    
                     raise ValueError(f"Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
     
-    def draw(self, hbox= False):
-        pg.draw.ellipse(self.screen, (0, 128, 255), self.rect, 0) # pyright: ignore[reportArgumentType]
-        if hbox: pg.draw.rect(self.screen, 'red', self.rect, 2)  # pyright: ignore[reportArgumentType]
+    def draw(self, hbox=False):
+        pg.draw.rect(self.screen, (0, 128, 255), self.rect)
+
+        if hbox:
+            pg.draw.rect(self.screen, "red", self.rect, 2)
     
     def resize(self):
         check = False
