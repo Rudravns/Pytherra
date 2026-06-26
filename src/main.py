@@ -29,16 +29,16 @@ class Main:
         while True:
             self.screen.fill((0, 0, 0)) # Clear the screen
             self.dt = self.clock.tick(120)/1000 # Limit to 120 FPS
-            
-            utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
 
-            if self.UI_DEBUG: self.debug_UI()
+            os.system("clear")
 
             keys = pg.key.get_pressed()
             
             self.update_movement(keys)
 
+            utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
             self.draw()
+            if self.UI_DEBUG: self.debug_UI()
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -97,7 +97,7 @@ class Main:
         dy = self.player.pos.y - old_y
 
         if dx != 0 or dy != 0:
-            self.world.move(-dx, -dy)
+            self.world.move(int(-dx), int(-dy))
 
             self.player.pos.x = old_x
             self.player.pos.y = old_y

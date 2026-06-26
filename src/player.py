@@ -16,7 +16,7 @@ class Player():
         self.FRICTION = 0.6 #World Dependent
         self.GRAVITY = 24 #World Dependent
         self.JUMP = 12
-        self.MAX_STEP = 20
+        self.MAX_STEP = 40
         self.vel = pg.Vector2(0, 0)
         
         #base_stuff
@@ -96,16 +96,16 @@ class Player():
                         self.rect.left = w.right
                         self.collide = "right"
 
-                    self.pos.x = self.rect.x
-
+                    # World changes broke step code
                     check = self.rect.bottom - w.top
                     if (abs(check) >= 0 and abs(check) <= self.MAX_STEP * utils.SCALE["height"]) and not self.jump:
-                        self.rect.bottom = w.top
+                        self.rect.y -= abs(check) + 1
                         self.rect.x += self.vel.x
-                        self.collide = "top"
+                        self.collide = "step"
                         pass
 
                     self.vel.x = 0
+                    self.pos.x = self.rect.x
                 else: # Error in input, should not happe
                    
                     raise ValueError(f"Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
