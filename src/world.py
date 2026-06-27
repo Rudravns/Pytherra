@@ -3,6 +3,7 @@ import os, sys
 from perlin_noise import PerlinNoise
 import utils
 import json
+import random
 
 
 class World_data:
@@ -159,7 +160,8 @@ def test():
 
 if __name__ == "__main__":
     pg.init() # Initialize pygame so Vector2 works
-    w = World_data(seed=42)
+    seed = random.randint(1, 100)
+    w = World_data(seed=seed)
     # Generate 10 columns of heights
     heights = w.generate_area(pg.Vector2(10, 5), 1)
-    print("Generated heights:", heights)
+    print(f"Seed {seed} generated heights:", heights)

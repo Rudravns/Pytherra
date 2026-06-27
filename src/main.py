@@ -23,6 +23,7 @@ class Main:
         self.player = player.Player((500, 400), 80) #Pos, Size
 
         # World
+        #data = world.World_data(seed=42)
         self.world = world.World()
 
     def run(self):
