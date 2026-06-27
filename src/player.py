@@ -5,8 +5,8 @@ class Player():
     def __init__(self, pos, size):
         self.pos = pg.Vector2(pos)
         
-        self.rect = pg.Rect(self.pos.x, self.pos.y, size, size)
-        self.base_rect = pg.Rect(self.pos.x, self.pos.y, size, size) # For resizing
+        self.rect = pg.Rect(self.pos.x, self.pos.y, size / 2, size)
+        self.base_rect = pg.Rect(self.pos.x, self.pos.y, size / 2, size) # For resizing
         self.last_pos = self.pos.copy()
 
         self.screen = pg.display.get_surface()
@@ -100,7 +100,7 @@ class Player():
                     check = self.rect.bottom - w.top
                     if (abs(check) >= 0 and abs(check) <= self.MAX_STEP * utils.SCALE["height"]) and not self.jump:
                         self.rect.y -= abs(check) + 1
-                        self.rect.x += self.vel.x
+                        self.rect.x += self.vel.x * 2
                         self.collide = "step"
                         pass
 

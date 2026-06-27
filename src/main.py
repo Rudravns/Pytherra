@@ -1,12 +1,13 @@
 # Rename Project to Pytherra
 import pygame as pg
 import os, sys
+import random
 import player, world, utils
 
 class Main:
     def __init__(self):
         pg.init()
-        os.system('cls' if os.name == 'nt' else "cleatddddd")
+        os.system('cls' if os.name == 'nt' else "clear")
         
         # Screen setup
         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
@@ -23,15 +24,17 @@ class Main:
         self.player = player.Player((500, 400), 80) #Pos, Size
 
         # World
-        #data = world.World_data(seed=42)
+        self.world_data = world.World_data(seed=random.randint(1, 1000))
+        heights = self.world_data.generate_area(pg.Vector2(100, 5), 1)
         self.world = world.World()
+        self.world.import_gen_data(heights)
 
     def run(self):
         while True:
             self.screen.fill((0, 0, 0)) # Clear the screen
             self.dt = self.clock.tick(120)/1000 # Limit to 120 FPS
 
-            os.system("clear")
+            os.system("clr" if os.name == "nt" else "clear")
 
             keys = pg.key.get_pressed()
             
@@ -71,6 +74,7 @@ class Main:
       utils.draw_text(self.screen, f"Jump: {self.player.jump}", 40, (255, 255, 255), (10, 160))
       utils.draw_text(self.screen, f"Collision: {self.player.collide}", 40, (255, 255, 255), (10, 200))
       utils.draw_text(self.screen, f"Scale: {utils.SCALE}", 40, (255, 255, 255), (10, 240))
+      utils.draw_text(self.screen, f"Seed: {self.world_data.seed}", 40, (255, 255, 255), (10, 280))
 
 
 

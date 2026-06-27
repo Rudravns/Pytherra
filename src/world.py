@@ -15,6 +15,8 @@ class World_data:
         :2: Dirt
         :3: Stone
         """
+        self.seed = seed
+
         self.noise = PerlinNoise(octaves=4, seed=seed)
         self.scale_factor = 50.0
         
@@ -92,6 +94,17 @@ class World():
         self.base_rect = self.get_rects(data["world"]) # For resizing
         self.screen = pg.display.get_surface()
         self.camera = pg.Vector2(0, 0)
+
+        self.GEN_SIZE = 120
+    
+    def import_gen_data(self, data=None, height=800):
+        if not data == None:
+            new_rect = []
+            for i in range(len(data)):
+                new_rect.append(pg.Rect(self.GEN_SIZE * i, height - data[i] * 10, self.GEN_SIZE, self.GEN_SIZE))
+            
+            self.rect = new_rect
+            self.base_rect = new_rect
         
     def resize(self):
         base_rect = self.base_rect.copy()
@@ -161,7 +174,10 @@ def test():
 if __name__ == "__main__":
     pg.init() # Initialize pygame so Vector2 works
     seed = random.randint(1, 100)
-    w = World_data(seed=seed)
+    w = World_data(seed=0)
     # Generate 10 columns of heights
     heights = w.generate_area(pg.Vector2(10, 5), 1)
     print(f"Seed {seed} generated heights:", heights)
+    world = World()
+    world.import_gen_data(heights, 800)
+    print(world.rect)
