@@ -1,183 +1,122 @@
 import pygame as pg
-import os, sys
 from perlin_noise import PerlinNoise
+import math
 import utils
-import json
-import random
 
-
-class World_data:
-    def __init__(self, seed=0) -> None:
-        """
-        :Block Types:
-        :0: Air
-        :1: Grass
-        :2: Dirt
-        :3: Stone
-        """
+class World:
+    def __init__(self, seed: int = 0):
         self.seed = seed
-
         self.noise = PerlinNoise(octaves=4, seed=seed)
-        self.scale_factor = 50.0
         
-        # Amplitude determines the maximum height variations of your terrain (e.g., hills can be up to 15 blocks tall/deep)
-        self.amplitude = 15.0 
+        # Data structure: self.chunks[chunk_x][local_x][y] = block_id
+        self.chunks = {}
         
-        # Base height is the flat floor level where the terrain starts (e.g., middle of your game screen)
-        self.base_height = 10 
+        # Engine parameters
+        self.BLOCK_SIZE = 40
+        self.CHUNK_SIZE = 16 # Blocks per chunk width
+        self.DEPTH_LIMIT = 40 # How far down blocks generate
         
-        self.max_min_x = [0,0]
-
-        self.core_data = {}
-
-    def generate_area(self, size: pg.Vector2, direction: int = 1) -> list[int]:
-        """Generates a chunk of terrain heights and updates the boundaries."""
+        # Terrain generation parameters (from original code)
+        self.scale = 70.0
+        self.amplitude = 25
+        self.base_height = 45
         
-        x_inputs, start_x, end_x = self.__world_cord_area(size, direction)
-       
-        # FIX: Multiply the noise output by an amplitude to scale it, 
-        # and optionally add a base_height so it doesn't default to ground level 0.
-        y_outputs = [
-            round(self.noise([x / self.scale_factor]) * self.amplitude + self.base_height) 
-            for x in x_inputs
-        ]
+        # Block colors (1: Grass, 2: Dirt, 3: Stone, 4: Snow)
+        self.COLORS = {
+            1: (34, 177, 76),   # Grass
+            2: (121, 85, 58),   # Dirt
+            3: (128, 128, 128), # Stone
+            4: (240, 240, 240)  # Snow
+        }
 
-        # Update the tracking boundaries seamlessly
-        if direction == 1:
-            self.max_min_x[1] = end_x
-        else:
-            self.max_min_x[0] = start_x
+    def get_surface_y(self, world_x: int) -> int:
+        """Returns the y-coordinate (in block space) of the surface at world_x."""
+        h = self.noise([world_x / self.scale])
+        h *= self.amplitude
+        h += self.base_height
+        return round(h)
 
-        return y_outputs
+    def get_chunk(self, chunk_x: int):
+        if chunk_x not in self.chunks:
+            self.generate_chunk(chunk_x)
+        return self.chunks[chunk_x]
 
-    def generate_tiles(self, size: pg.Vector2, direction: int = 1):
-        # get y inputs
-        heights = self.generate_area(size, direction)
-
-        # Here you would typically generate actual tile blocks (Grass, Dirt, Stone) 
-        # using the generated heights for each x coordinate.
-        for x in range(int(size.x)):
-            # Example placeholder logic:
-            x_coord = self.max_min_x[0] + x if direction != 1 else self.max_min_x[1] - int(size.x) + x
-            terrain_height = heights[x]
-            for y in range(int(size.y)):
-                current = terrain_height-y
-
-                
-
-            # Now you have a varied height instead of all 0s!
-
-    def __world_cord_area(self, size: pg.Vector2, direction: int = 1):
-        chunk_width = int(size.x)
-        if direction == 1:
-            start_x = int(self.max_min_x[1])
-            end_x = start_x + chunk_width
-        else:
-            end_x = int(self.max_min_x[0])
-            start_x = end_x - chunk_width
-
-        x_inputs = range(start_x, end_x)
-        return x_inputs, start_x, end_x
-    
-    def __match_y_to_tile(self, y):
-        
-        block = 0
-        #KIAN DO IT FROM HERE
-        
-class World():
-    def __init__(self):
-        # Load world data from JSON file
-        with open("src/world_data.json", "r") as f:
-            data = json.load(f)
-        
-        self.rect = self.get_rects(data["world"])
-        self.base_rect = self.get_rects(data["world"]) # For resizing
-        self.screen = pg.display.get_surface()
-        self.camera = pg.Vector2(0, 0)
-
-        self.GEN_SIZE = 120
-    
-    def import_gen_data(self, data=None, height=800):
-        if not data == None:
-            new_rect = []
-            for i in range(len(data)):
-                new_rect.append(pg.Rect(self.GEN_SIZE * i, height - data[i] * 10, self.GEN_SIZE, self.GEN_SIZE))
+    def generate_chunk(self, chunk_x: int):
+        chunk = {}
+        for local_x in range(self.CHUNK_SIZE):
+            world_x = chunk_x * self.CHUNK_SIZE + local_x
+            surface_y = self.get_surface_y(world_x)
             
-            self.rect = new_rect
-            self.base_rect = new_rect
-        
-    def resize(self):
-        base_rect = self.base_rect.copy()
-        for i, rect in enumerate(self.rect):
-            rect.x = base_rect[i].x * utils.SCALE["width"]
-            rect.y = base_rect[i].y * utils.SCALE["height"]
-            rect.width = base_rect[i].width * utils.SCALE["width"]
-            rect.height = base_rect[i].height * utils.SCALE["height"]
+            column = {}
+            # Generate column downwards
+            for y in range(surface_y, surface_y + self.DEPTH_LIMIT):
+                depth = y - surface_y
+                
+                if depth == 0:
+                    # Peaks (lower y coordinate values) get snow
+                    block = 4 if y < 35 else 1 
+                elif depth < 4:
+                    block = 2
+                else:
+                    block = 3
+                    
+                column[y] = block
+            chunk[local_x] = column
+            
+        self.chunks[chunk_x] = chunk
 
-        return self.rect
-    
-    def move(self, dx, dy):
-        for rect in self.rect:
-            rect.x += dx
-            rect.y += dy
-
-    def draw(self):
-        for rect in self.rect:
-            draw_rect = pg.Rect(
-                rect.x - self.camera.x,
-                rect.y - self.camera.y,
-                rect.width,
-                rect.height
-            )
-
-            pg.draw.rect(self.screen, "green", draw_rect) # pyright: ignore[reportArgumentType]
-    
-    def get_rects(self, data):
+    def get_nearby_rects(self, player_rect: pg.Rect) -> list[pg.Rect]:
+        """Fetches block rects only in the immediate vicinity of the player."""
         rects = []
-        for item in data:
-            rects.append(pg.Rect(item[0], item[1], item[2], item[3]))
+        
+        # Calculate block coordinate bounds based on player rect + a 1-block margin
+        start_bx = int((player_rect.left - self.BLOCK_SIZE) // self.BLOCK_SIZE)
+        end_bx = int((player_rect.right + self.BLOCK_SIZE) // self.BLOCK_SIZE)
+        start_by = int((player_rect.top - self.BLOCK_SIZE) // self.BLOCK_SIZE)
+        end_by = int((player_rect.bottom + self.BLOCK_SIZE) // self.BLOCK_SIZE)
+        
+        for bx in range(start_bx, end_bx + 1):
+            chunk_x = bx // self.CHUNK_SIZE
+            local_x = bx % self.CHUNK_SIZE
+            chunk = self.get_chunk(chunk_x)
+            
+            if local_x in chunk:
+                for by in range(start_by, end_by + 1):
+                    if by in chunk[local_x]:
+                        rects.append(pg.Rect(bx * self.BLOCK_SIZE, by * self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE))
+        
         return rects
 
-    def __str__(self):
-        return f"{self.base_rect}"
-    
-    def save_dict(self):
-      
-        return {}
-
-
-
-def test():
-    import matplotlib.pyplot as plt
-    # 1. Initialize noise generator
-    # Lower octaves = smoother transitions; higher octaves = more jagged waves
-    noise = PerlinNoise(octaves=4, seed=42)
-
-    # 2. Define your x inputs
-    x_inputs = list(range(0, 200))
-
-    # 3. Generate y outputs
-    # Dividing 'x' by a scale factor (e.g., 50.0) is crucial for a smooth output
-    scale_factor = 50.0
-    y_outputs = [noise([x / scale_factor]) for x in x_inputs]
-
-    # 4. Plot the mapping
-    plt.figure(figsize=(10, 4))
-    plt.plot(x_inputs, y_outputs, label='Smooth Perlin Curve', color='blue')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-
-if __name__ == "__main__":
-    pg.init() # Initialize pygame so Vector2 works
-    seed = random.randint(1, 100)
-    w = World_data(seed=0)
-    # Generate 10 columns of heights
-    heights = w.generate_area(pg.Vector2(10, 5), 1)
-    print(f"Seed {seed} generated heights:", heights)
-    world = World()
-    world.import_gen_data(heights, 800)
-    print(world.rect)
+    def draw(self, screen: pg.Surface, camera: pg.Vector2):
+        w, h = screen.get_size()
+        scale_w, scale_h = utils.SCALE["width"], utils.SCALE["height"]
+        
+        # Calculate camera view bounds in logical world coordinates
+        start_world_x = camera.x
+        end_world_x = camera.x + w / scale_w
+        start_world_y = camera.y
+        end_world_y = camera.y + h / scale_h
+        
+        # Convert to block coordinates to efficiently iterate
+        start_bx = int(start_world_x // self.BLOCK_SIZE)
+        end_bx = int(end_world_x // self.BLOCK_SIZE)
+        start_by = int(start_world_y // self.BLOCK_SIZE)
+        end_by = int(end_world_y // self.BLOCK_SIZE)
+        
+        for bx in range(start_bx, end_bx + 1):
+            chunk_x = bx // self.CHUNK_SIZE
+            local_x = bx % self.CHUNK_SIZE
+            chunk = self.get_chunk(chunk_x)
+            
+            if local_x in chunk:
+                for by, block_id in chunk[local_x].items():
+                    # Only draw blocks that are inside the vertical view bounds
+                    if start_by <= by <= end_by:
+                        # Calculate screen positions accurately to avoid floating point seams
+                        rx1 = (bx * self.BLOCK_SIZE - camera.x) * scale_w
+                        ry1 = (by * self.BLOCK_SIZE - camera.y) * scale_h
+                        rx2 = ((bx + 1) * self.BLOCK_SIZE - camera.x) * scale_w
+                        ry2 = ((by + 1) * self.BLOCK_SIZE - camera.y) * scale_h
+                        
+                        draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
+                        pg.draw.rect(screen, self.COLORS[block_id], draw_rect)

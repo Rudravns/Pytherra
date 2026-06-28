@@ -1,151 +1,128 @@
+# pyright: reportArgumentType = false
 import pygame as pg
-import os, sys, utils
+import math
+import utils
+import Dualsense
 
-class Player():
+class Player:
     def __init__(self, pos, size):
         self.pos = pg.Vector2(pos)
-        
+        # Fixed logical bounding box (doesn't change size internally on resize)
         self.rect = pg.Rect(self.pos.x, self.pos.y, size / 2, size)
-        self.base_rect = pg.Rect(self.pos.x, self.pos.y, size / 2, size) # For resizing
-        self.last_pos = self.pos.copy()
-
-        self.screen = pg.display.get_surface()
-        self.prev_scale = {"width": 1.0, "height": 1.0, "overall": 1.0}
-
-        self.SPEED = 500
-        self.FRICTION = 0.6 #World Dependent
-        self.GRAVITY = 24 #World Dependent
-        self.JUMP = 12
-        self.MAX_STEP = 40
+        
+        # Delta-time based physics configuration
+        self.SPEED = 2500     # Acceleration in px/s^2
+        self.MAX_SPEED = 400  # Max horizontal speed in px/s
+        self.FRICTION = 12    # Friction deceleration coefficient
+        self.GRAVITY = 2000   # Downward pull in px/s^2
+        self.JUMP = 700       # Upward instantaneous impulse in px/s
+        self.MAX_STEP = 15    # Maximum height they can walk over smoothly
+        
         self.vel = pg.Vector2(0, 0)
-        
-        #base_stuff
-        self.BASE_SPEED = self.SPEED
-        self.BASE_FRICTION = self.FRICTION
-        self.BASE_GRAVITY = self.GRAVITY
-        self.BASE_JUMP = self.JUMP
-        
         self.jump = True
-
-        #debug
         self.collide = ""
 
-    def update(self, key, world: list[pg.Rect], dt):
-        if key[pg.K_LEFT] or key[pg.K_a]:
-            self.vel.x -= self.SPEED * dt
-        if key[pg.K_RIGHT] or key[pg.K_d]:
-            self.vel.x += self.SPEED * dt
-        if (key[pg.K_SPACE] or key[pg.K_UP] or key[pg.K_w]) and not self.jump:
-            self.vel.y -= self.JUMP
-
-        self.jump = True
-        # Apply friction and gravity
-        self.vel.x *= self.FRICTION
-        self.pos.x += self.vel.x
-        self.vel.y += self.GRAVITY * dt
-        self.pos.y += self.vel.y
-
-        # Failsafe for falling out of the world
-        if self.rect.top > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
-            #self.pos.y -= self.vel.y
-            self.pos.y *= utils.SCALE["height"]
-            #checks if the player is still out of the world after the failsafe
-            if self.pos.y > self.screen.get_height(): # pyright: ignore[reportOptionalMemberAccess]
-                self.rect.y = self.screen.get_height() - self.rect.height # pyright: ignore[reportOptionalMemberAccess]
-                while self.rect.collideobjectsall(world):
-                    self.rect.y -= 1
-                
-                self.pos.y = self.rect.y
-
-            self.vel.y = 0
-        
-        self.collide = ""
-        self.rect.y = int(self.pos.y)
-        self.check_collision(world, (None, self.rect.y))
-        self.rect.x = int(self.pos.x)
-        self.check_collision(world, (self.rect.x, None))
-
-        self.last_pos = self.pos.copy()
-
-    def check_collision(self, world: list[pg.Rect], move: tuple):
-        # Check for collision with the world
-        for w in world:
-            if w.colliderect(self.rect):
-                # If colliding, reset position and velocity
-                # Fixed collision (Happy)
-                if move[0] is None and move[1] is not None: # Vertical movement
-                    self.rect.y -= self.vel.y
-
-                    if self.vel.y > 0:
-                        self.rect.bottom = w.top
-                        self.jump = False
-                        self.collide = "top"
-                    elif self.vel.y < 0:
-                        self.rect.top = w.bottom
-                        self.collide = "bottom"
-                    
-                    self.vel.y = 0
-                    self.pos.y = self.rect.y
-                elif move[1] is None and move[0] is not None: # Horizontal movement
-                    self.rect.x -= self.vel.x
-
-                    if self.vel.x > 0:
-                        self.rect.right = w.left
-                        self.collide = "left"
-                    elif self.vel.x < 0:
-                        self.rect.left = w.right
-                        self.collide = "right"
-
-                    # World changes broke step code
-                    check = self.rect.bottom - w.top
-                    if (abs(check) >= 0 and abs(check) <= self.MAX_STEP * utils.SCALE["height"]) and not self.jump:
-                        self.rect.y -= abs(check) + 1
-                        self.rect.x += self.vel.x * 2
-                        self.collide = "step"
-                        pass
-
-                    self.vel.x = 0
-                    self.pos.x = self.rect.x
-                else: # Error in input, should not happe
-                   
-                    raise ValueError(f"Error: Invalid tuple value for move. X : {move[0]}, Y: {move[1]}")
-    
-    def draw(self, hbox=False):
-        pg.draw.rect(self.screen, (0, 128, 255), self.rect)
-
-        if hbox:
-            pg.draw.rect(self.screen, "red", self.rect, 2)
-    
-    def resize(self):
-        check = False
-        for n in utils.SCALE:
-            if self.prev_scale[n] != utils.SCALE[n]: check = True
-
-        if check:
-            # Calculate the ratio difference since the last resize
-            ratio_w = utils.SCALE["width"] / self.prev_scale["width"]
-            ratio_h = utils.SCALE["height"] / self.prev_scale["height"]
-
-            # Apply this ratio to the player's true position and velocity
-            self.pos.x *= ratio_w
-            self.pos.y *= ratio_h
-            self.vel.x *= ratio_w
-            self.vel.y *= ratio_h
+    def update(self, keys, world_rects: list[pg.Rect], dt: float):
+        # Prevent physics explosions during lag spikes (e.g. window dragging)
+        if dt > 0.05: 
+            dt = 0.05 
             
-            # Sync the rect coordinates
-            self.rect.x = int(self.pos.x)
-            self.rect.y = int(self.pos.y)
+        # Horizontal input acceleration
+        acc_x = 0
+        if keys[pg.K_LEFT] or keys[pg.K_a]:
+            acc_x -= self.SPEED
+        if keys[pg.K_RIGHT] or keys[pg.K_d]:
+            acc_x += self.SPEED
 
-            # Record the new scale for the next resize event
-            for n in utils.SCALE:
-                self.prev_scale[n] = utils.SCALE[n]
+        # Apply friction if no keys pressed
+        if acc_x == 0:
+            if self.vel.x > 0:
+                self.vel.x -= self.FRICTION * self.SPEED * dt
+                if self.vel.x < 0: self.vel.x = 0
+            elif self.vel.x < 0:
+                self.vel.x += self.FRICTION * self.SPEED * dt
+                if self.vel.x > 0: self.vel.x = 0
+        else:
+            self.vel.x += acc_x * dt
+            
+        # Clamp to max speed
+        if self.vel.x > self.MAX_SPEED: self.vel.x = self.MAX_SPEED
+        if self.vel.x < -self.MAX_SPEED: self.vel.x = -self.MAX_SPEED
+
+        # Vertical gravity
+        self.vel.y += self.GRAVITY * dt
+
+        # Jump
+        if (keys[pg.K_SPACE] or keys[pg.K_UP] or keys[pg.K_w]) and not self.jump:
+            self.vel.y = -self.JUMP
+            self.jump = True
+
+        self.collide = ""
+
+        # Move horizontally and collide
+        self.pos.x += self.vel.x * dt
+        self.rect.x = int(self.pos.x)
+        self.check_collision(world_rects, 'x')
+
+        # Move vertically and collide
+        self.pos.y += self.vel.y * dt
+        self.rect.y = int(self.pos.y)
+        self.check_collision(world_rects, 'y')
+
+        # Failsafe: if they fall into the void, respawn high up
+        if self.pos.y > 6000:
+            self.pos.y = -1000
+            self.vel.y = 0
+
+    def check_collision(self, world_rects: list[pg.Rect], axis: str):
+        for w in world_rects:
+            if self.rect.colliderect(w):
+                if axis == 'x':
+                    if self.vel.x > 0: # Moving right
+                        # Step-up logic
+                        if self.rect.bottom - w.top <= self.MAX_STEP and not self.jump:
+                            self.rect.bottom = w.top
+                            self.pos.y = self.rect.y
+                            self.collide = "step_right"
+                        else:
+                            self.rect.right = w.left
+                            self.vel.x = 0
+                            self.collide = "right"
+                    elif self.vel.x < 0: # Moving left
+                        # Step-up logic
+                        if self.rect.bottom - w.top <= self.MAX_STEP and not self.jump:
+                            self.rect.bottom = w.top
+                            self.pos.y = self.rect.y
+                            self.collide = "step_left"
+                        else:
+                            self.rect.left = w.right
+                            self.vel.x = 0
+                            self.collide = "left"
+                    self.pos.x = self.rect.x
+                    
+                elif axis == 'y':
+                    if self.vel.y > 0: # Falling
+                        self.rect.bottom = w.top
+                        self.vel.y = 0
+                        self.jump = False
+                        self.collide = "bottom"
+                    elif self.vel.y < 0: # Hitting head
+                        self.rect.top = w.bottom
+                        self.vel.y = 0
+                        self.collide = "top"
+                    self.pos.y = self.rect.y
+
+    def draw(self, screen: pg.Surface, camera: pg.Vector2, hbox=False):
+        # Draw scales to exactly what utils.SCALE demands, leaving logic untouched
+        scale_w, scale_h = utils.SCALE["width"], utils.SCALE["height"]
         
-        # We can still scale width/height via base_rect because the player's physical size is static relative to scale
-        self.rect.width = self.base_rect.width * utils.SCALE["overall"]
-        self.rect.height = self.base_rect.height * utils.SCALE["overall"]
-
-        self.SPEED = self.BASE_SPEED * utils.SCALE["width"]
-        self.GRAVITY = self.BASE_GRAVITY * utils.SCALE["height"]
-        self.JUMP = self.BASE_JUMP * utils.SCALE["height"]
-
-        return self.rect
+        rx1 = (self.rect.x - camera.x) * scale_w
+        ry1 = (self.rect.y - camera.y) * scale_h
+        rx2 = (self.rect.right - camera.x) * scale_w
+        ry2 = (self.rect.bottom - camera.y) * scale_h
+        
+        draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
+        
+        pg.draw.rect(screen, (0, 128, 255), draw_rect)
+        if hbox:
+            pg.draw.rect(screen, "red", draw_rect, 2)

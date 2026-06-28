@@ -25,5 +25,3 @@ def draw_text(screen: pygame.Surface, text: str, font_size: int, color: tuple, p
 
 def scale_font_size(base_size, scale):
     return int(min(scale["width"], scale["height"]) * base_size)
-
-
