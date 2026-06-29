@@ -55,8 +55,6 @@ def find_location(string: str, goal: str):
     concact_text = origin_text
     text = ""
 
-    print(origin_text)
-
     i = 0
 
     for l in origin_text:

@@ -1,7 +1,7 @@
 # Rename Project to Pytherra
 import pygame as pg
 import os, sys
-import random, time
+import random, time, threading
 import player, world, utils
 
 class Main:
@@ -36,16 +36,20 @@ class Main:
         # Trigger initial scale configuration
         self.resize(self.screen.get_width(), self.screen.get_height())
     
-    def load_world(self):
-        self.screen.fill((0, 0, 0))
-        utils.draw_text(self.screen, "Loading World", 40, (255, 255, 255), (400, 400))
+    def load_screen(self):
+        while True:
+            self.screen.fill((0, 0, 0))
+            utils.draw_text(self.screen, "Loading World", 40, (255, 255, 255), (400, 400))
+            
+            pg.display.flip()
 
-        self.world.generate_world(self.WORLD_SIZE)
+            done = self.world.generate_world(self.WORLD_SIZE)
+            if done: break
 
         utils.remove_from_cache("Loading World", 40, (255, 255, 255))
 
     def run(self):
-        self.load_world()
+        self.load_screen()
 
         while True:
             # Clear screen (Sky blue)

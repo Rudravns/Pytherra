@@ -6,14 +6,14 @@ import utils
 class World:
     def __init__(self, seed: int = 0):
         self.seed = seed
-        self.noise = PerlinNoise(octaves=4, seed=seed)
+        self.noise = PerlinNoise(octaves=6, seed=seed)
         
         # Data structure: self.chunks[chunk_x][local_x][y] = block_id
         self.chunks = {}
         
         # Engine parameters
         self.BLOCK_SIZE = 40
-        self.CHUNK_SIZE = 16 # Blocks per chunk width
+        self.CHUNK_SIZE = 32 # Blocks per chunk width
         self.DEPTH_LIMIT = 40 # How far down blocks generate
         
         # Terrain generation parameters (from original code)
@@ -39,10 +39,6 @@ class World:
         return round(h)
 
     def get_chunk(self, chunk_x: int):
-        """
-        if chunk_x not in self.chunks:
-            self.generate_chunk(chunk_x)
-        """
         if chunk_x not in self.chunks:
             self.generate_chunk(chunk_x, boundry=True)
         return self.chunks[chunk_x]
@@ -83,8 +79,12 @@ class World:
         self.chunks[chunk_x] = chunk
 
     def generate_world(self, size: int):
+        size += size % 2
+
         for i in range(size + 1):
             self.generate_chunk(i - size//2)
+        
+        return True
 
     def get_nearby_rects(self, player_rect: pg.Rect) -> list[pg.Rect]:
         """Fetches block rects only in the immediate vicinity of the player."""
