@@ -1,7 +1,7 @@
 # Rename Project to Pytherra
 import pygame as pg
 import os, sys
-import random
+import random, time
 import player, world, utils
 
 class Main:
@@ -21,6 +21,7 @@ class Main:
 
         # Generate seed and World
         self.seed = random.randint(0, 10000)
+        self.WORLD_SIZE = 2 # In chunks (In blocks = self.world_size * 16)
         self.world = world.World(seed=self.seed)
         
         # Spawn the player dynamically above the terrain at x = 0
@@ -34,8 +35,18 @@ class Main:
         
         # Trigger initial scale configuration
         self.resize(self.screen.get_width(), self.screen.get_height())
+    
+    def load_world(self):
+        self.screen.fill((0, 0, 0))
+        utils.draw_text(self.screen, "Loading World", 40, (255, 255, 255), (400, 400))
+
+        self.world.generate_world(self.WORLD_SIZE)
+
+        utils.remove_from_cache("Loading World", 40, (255, 255, 255))
 
     def run(self):
+        self.load_world()
+
         while True:
             # Clear screen (Sky blue)
             self.screen.fill((135, 206, 235)) 
@@ -95,7 +106,10 @@ class Main:
         utils.draw_text(self.screen, f"Collision: {self.player.collide}", 40, (255, 255, 255), (10, 130))
         utils.draw_text(self.screen, f"Scale: W:{round(utils.SCALE['width'], 2)}, H:{round(utils.SCALE['height'],2)}", 40, (255, 255, 255), (10, 160))
         utils.draw_text(self.screen, f"Seed: {self.seed}", 40, (255, 255, 255), (10, 190))
-        utils.draw_text(self.screen, f"Player Pos but fake: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
+        utils.draw_text(self.screen, f"Block Pos: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
+        utils.draw_text(self.screen, f"Loaded Chunks: {len(self.world.chunks)}", 40, (255, 255, 255), (10, 250))
+        utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
+
 
     def resize(self, w, h):
         """

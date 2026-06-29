@@ -128,7 +128,7 @@ if __name__ == '__main__':
         # 2. Print values every frame (OUTSIDE the event loop)
         # Using controller.joysticks.keys() ensures you query active IDs
         print(f"Button {b} pressed")
-        print(f"Left Stick: {controller.get_axis(0,"left")}")
-        print(f"Right Stick: {controller.get_axis(0,"Right")}")
+        #print(f"Left Stick: {controller.get_axis(0,"left")}")
+        #print(f"Right Stick: {controller.get_axis(0,"Right")}")
         print(f"Left Trigger: {controller.get_trigger(0,'l2')}")
         print(f"Right Trigger: {controller.get_trigger(0,'r2')}")

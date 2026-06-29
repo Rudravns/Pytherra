@@ -21,12 +21,14 @@ class World:
         self.amplitude = 25
         self.base_height = 45
         
-        # Block colors (1: Grass, 2: Dirt, 3: Stone, 4: Snow)
+        # Block colors (0: Boundry, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water)
         self.COLORS = {
+            0: (0, 0, 0), # Boundry, not meant to be drawn
             1: (34, 177, 76),   # Grass
             2: (121, 85, 58),   # Dirt
             3: (128, 128, 128), # Stone
-            4: (240, 240, 240)  # Snow
+            4: (240, 240, 240),  # Snow
+            5: (100, 255, 150) # Water
         }
 
     def get_surface_y(self, world_x: int) -> int:
@@ -37,24 +39,39 @@ class World:
         return round(h)
 
     def get_chunk(self, chunk_x: int):
+        """
         if chunk_x not in self.chunks:
             self.generate_chunk(chunk_x)
+        """
+        if chunk_x not in self.chunks:
+            self.generate_chunk(chunk_x, boundry=True)
         return self.chunks[chunk_x]
 
-    def generate_chunk(self, chunk_x: int):
+    def generate_chunk(self, chunk_x: int, boundry: bool = False):
         chunk = {}
         for local_x in range(self.CHUNK_SIZE):
             world_x = chunk_x * self.CHUNK_SIZE + local_x
+            #print(world_x)
             surface_y = self.get_surface_y(world_x)
+            #print(surface_y)
+
+            # Smooth out terrain
+            prev_surf_y = self.get_surface_y(world_x - 1)
+            next_surf_y = self.get_surface_y(world_x + 1)
+            if prev_surf_y == next_surf_y and surface_y != prev_surf_y: # <-- could also check for next_surf_y
+                surface_y = prev_surf_y # could also set surface_y to next_surf_y
             
             column = {}
             # Generate column downwards
-            for y in range(surface_y, surface_y + self.DEPTH_LIMIT):
+            start = 0 if boundry else surface_y
+            for y in range(start, surface_y + self.DEPTH_LIMIT):
                 depth = y - surface_y
                 
                 if depth == 0:
                     # Peaks (lower y coordinate values) get snow
                     block = 4 if y < 35 else 1 
+                elif depth < 0 and boundry:
+                    block = 0
                 elif depth < 4:
                     block = 2
                 else:
@@ -64,6 +81,10 @@ class World:
             chunk[local_x] = column
             
         self.chunks[chunk_x] = chunk
+
+    def generate_world(self, size: int):
+        for i in range(size + 1):
+            self.generate_chunk(i - size//2)
 
     def get_nearby_rects(self, player_rect: pg.Rect) -> list[pg.Rect]:
         """Fetches block rects only in the immediate vicinity of the player."""
@@ -120,3 +141,12 @@ class World:
                         
                         draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
                         pg.draw.rect(screen, self.COLORS[block_id], draw_rect)
+                    
+
+if __name__ == "__main__":
+    w = World()
+    w.get_chunk(0)
+    print(w.chunks)
+    w.get_chunk(-1)
+    w.get_chunk(1)
+    print(len(w.chunks))
