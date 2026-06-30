@@ -15,7 +15,7 @@ class Player:
         self.MAX_SPEED = 400  # Max horizontal speed in px/s
         self.FRICTION = 12    # Friction deceleration coefficient
         self.GRAVITY = 2000   # Downward pull in px/s^2
-        self.JUMP = 700       # Upward instantaneous impulse in px/s
+        self.JUMP = 1000      # Upward instantaneous impulse in px/s
         self.MAX_STEP = 32    # Maximum height they can walk over smoothly
         
         self.vel = pg.Vector2(0, 0)
@@ -57,17 +57,18 @@ class Player:
             self.vel.y = -self.JUMP
             self.jump = True
 
+        self.jump = True
         self.collide = ""
 
         # Move horizontally and collide
+        self.pos.y += self.vel.y * dt + 1
+        self.rect.y = int(self.pos.y)
+        self.check_collision(world_rects, 'y')
+
+        # Move vertically and collide
         self.pos.x += self.vel.x * dt
         self.rect.x = int(self.pos.x)
         self.check_collision(world_rects, 'x')
-
-        # Move vertically and collide
-        self.pos.y += self.vel.y * dt
-        self.rect.y = int(self.pos.y)
-        self.check_collision(world_rects, 'y')
 
         # Failsafe: if they fall into the void, respawn high up
         if self.pos.y > 6000:

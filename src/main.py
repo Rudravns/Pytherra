@@ -7,7 +7,7 @@ import player, world, loading, utils
 class Main:
     def __init__(self):
         pg.init()
-        os.system('cls' if os.name == 'nt' else "clear")
+        #os.system('cls' if os.name == 'nt' else "clear")
         
         # Screen setup
         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)

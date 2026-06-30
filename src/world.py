@@ -28,7 +28,7 @@ class World:
             2: (121, 85, 58),   # Dirt
             3: (128, 128, 128), # Stone
             4: (240, 240, 240),  # Snow
-            5: (100, 255, 150) # Water
+            5: (100, 150, 255) # Water
         }
 
     def get_surface_y(self, world_x: int) -> int:
@@ -59,15 +59,28 @@ class World:
             
             column = {}
             # Generate column downwards
-            start = 0 if boundry else surface_y
+            if boundry:
+                start = 0
+            else:
+                if surface_y < 45:
+                    start = surface_y
+                else:
+                    start = 45
             for y in range(start, surface_y + self.DEPTH_LIMIT):
                 depth = y - surface_y
                 
                 if depth == 0:
                     # Peaks (lower y coordinate values) get snow
-                    block = 4 if y < 35 else 1 
-                elif depth < 0 and boundry:
-                    block = 0
+                    if y < 35:
+                        block = 4
+                    elif y > 45:
+                        block = 5
+                    else:
+                        block = 1
+                elif depth < 0:
+                    #print("Good")
+                    if boundry: block = 0
+                    block = 5
                 elif depth < 4:
                     block = 2
                 else:
