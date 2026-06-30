@@ -16,7 +16,7 @@ class Player:
         self.FRICTION = 12    # Friction deceleration coefficient
         self.GRAVITY = 2000   # Downward pull in px/s^2
         self.JUMP = 700       # Upward instantaneous impulse in px/s
-        self.MAX_STEP = 40    # Maximum height they can walk over smoothly
+        self.MAX_STEP = 32    # Maximum height they can walk over smoothly
         
         self.vel = pg.Vector2(0, 0)
         self.jump = True

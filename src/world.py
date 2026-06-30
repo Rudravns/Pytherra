@@ -12,7 +12,7 @@ class World:
         self.chunks = {}
         
         # Engine parameters
-        self.BLOCK_SIZE = 40
+        self.BLOCK_SIZE = 32
         self.CHUNK_SIZE = 32 # Blocks per chunk width
         self.DEPTH_LIMIT = 40 # How far down blocks generate
         
