@@ -2,7 +2,7 @@
 import pygame as pg
 import os, sys
 import random, time, threading
-import player, world, utils
+import player, world, loading, utils
 
 class Main:
     def __init__(self):
@@ -21,7 +21,7 @@ class Main:
 
         # Generate seed and World
         self.seed = random.randint(0, 10000)
-        self.WORLD_SIZE = 2 # In chunks (In blocks = self.world_size * 16)
+        self.WORLD_SIZE = 10**2 # In chunks (In blocks = self.world_size * 16)
         self.world = world.World(seed=self.seed)
         
         # Spawn the player dynamically above the terrain at x = 0
@@ -35,21 +35,12 @@ class Main:
         
         # Trigger initial scale configuration
         self.resize(self.screen.get_width(), self.screen.get_height())
-    
-    def load_screen(self):
-        while True:
-            self.screen.fill((0, 0, 0))
-            utils.draw_text(self.screen, "Loading World", 40, (255, 255, 255), (400, 400))
-            
-            pg.display.flip()
-
-            done = self.world.generate_world(self.WORLD_SIZE)
-            if done: break
-
-        utils.remove_from_cache("Loading World", 40, (255, 255, 255))
 
     def run(self):
-        self.load_screen()
+        """
+        l = loading.Loading(self.screen)
+        l.run()
+        """
 
         while True:
             # Clear screen (Sky blue)

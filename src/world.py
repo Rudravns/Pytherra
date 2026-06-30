@@ -40,7 +40,7 @@ class World:
 
     def get_chunk(self, chunk_x: int):
         if chunk_x not in self.chunks:
-            self.generate_chunk(chunk_x, boundry=True)
+            self.generate_chunk(chunk_x, boundry=False)
         return self.chunks[chunk_x]
 
     def generate_chunk(self, chunk_x: int, boundry: bool = False):
