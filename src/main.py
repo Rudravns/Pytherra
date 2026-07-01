@@ -5,52 +5,49 @@ import random, time, threading
 import player, world, loading, utils
 
 
-class Main:
-    def __init__(self):
+class pytherra:
+    def __init__(self, seed:int = None): # pyright: ignore[reportArgumentType]
         pg.init()
         #os.system('cls' if os.name == 'nt' else "clear")
         
         # Screen setup
         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
+        pg.display.set_caption("Pytherra")
         self.clock = pg.time.Clock()
         self.BASE_SIZE = (1000, 800)
         self.dt = 0
 
-        
         # Debugs
         self.CONSOLE_DEBUG = True
         self.UI_DEBUG = True
 
         # Generate seed and World
-        self.seed = random.randint(0, 10000)
+        self.seed = random.randint(0, 10000) if seed is None else seed
         self.WORLD_SIZE = 10**2 # In chunks (In blocks = self.world_size * 16)
         self.world = world.World(seed=self.seed)
-
         
+
         # Spawn the player dynamically above the terrain at x = 0
         spawn_x = 0
         # Calculate exact surface block y-coordinate, convert to pixels, go 200px higher
-        spawn_y= self.world.get_surface_y(0)[0] * self.world.BLOCK_SIZE - 200
+        spawn_y = self.world.get_surface_y(0)[0] * self.world.BLOCK_SIZE - 200
         self.player = player.Player((spawn_x, spawn_y), 50) # Pos, Size
         
         # Initialize camera
         self.camera = pg.Vector2(0, 0)
-        
-        # Trigger initial scale configuration
-        self.resize(self.screen.get_width(), self.screen.get_height())
 
     def run(self):
-        """
-        l = loading.Loading(self.screen)
+        # Instantiate and run the loading screen by passing 'self' (the main game application)
+        # This lets the loading screen access self.world to pre-generate chunks before playing!
+        l = loading.Loading(self)
         l.run()
-        """
 
         while True:
             # Clear screen (Sky blue)
             self.screen.fill((135, 206, 235)) 
             
             # Limit to 120 FPS, get delta time in seconds
-            self.dt = self.clock.tick(0) / 1000.0 
+            self.dt = self.clock.tick(120) / 1000.0 
 
             keys = pg.key.get_pressed()
             self.update_game(keys)
@@ -109,8 +106,7 @@ class Main:
         utils.draw_text(self.screen, f"Block Pos: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
         utils.draw_text(self.screen, f"Loaded Chunks: {len(self.world.chunks)}", 40, (255, 255, 255), (10, 250))
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
-        utils.draw_text(self.screen, f"World Surface Y: {self.world.get_surface_y(0)[0]}", 40, (255, 255, 255), (10, 310))
-        utils.draw_text(self.screen, f"Biome Value: {self.world.get_surface_y(0)[1]:.2f}", 40, (255, 255, 255), (10, 340))
+
 
     def resize(self, w, h):
         """
@@ -121,7 +117,7 @@ class Main:
         # Calculate a single uniform scale factor using the minimum ratio 
         # to ensure the aspect ratio never warps/stretches.
         uniform_scale = min(w / self.BASE_SIZE[0], h / self.BASE_SIZE[1])
-        # I will not go everywhere to change from w and h to uniform_scale, so I will just set both width and height to the same value0000000000000
+        
         utils.SCALE["width"] = uniform_scale
         utils.SCALE["height"] = uniform_scale
         utils.SCALE["overall"] = uniform_scale
@@ -129,7 +125,7 @@ class Main:
         utils.cache.clear() # Clear the text cache to regenerate fonts with new sizes
 
 if __name__ == "__main__":
-    app = Main()
+    app = pytherra(0)
     app.run()
     pg.quit()
     sys.exit()
