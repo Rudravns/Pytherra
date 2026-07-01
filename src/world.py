@@ -10,6 +10,8 @@ class World:
     def __init__(self, seed: int = 0):
         self.seed = seed
         self.noise = PerlinNoise(octaves=6, seed=seed)
+        # Slow-moving noise to determine regional biomes (Plains, Mountains, Oceans)
+        self.biome_noise = PerlinNoise(octaves=3, seed=seed + 1000)
         
         # Data structure: self.chunks[chunk_x][local_x][y] = block_id
         self.chunks = {}
@@ -17,12 +19,10 @@ class World:
         # Engine parameters
         self.BLOCK_SIZE = 32
         self.CHUNK_SIZE = 32 # Blocks per chunk width
-        self.DEPTH_LIMIT = 40 # How far down blocks generate
+        self.DEPTH_LIMIT = 45 # Slightly increased depth limit to handle steep mountains solidly
         
-        # Terrain generation parameters (from original code)
+        # Terrain generation parameters (used as base defaults)
         self.scale = 70.0
-        self.amplitude = 25
-        self.base_height = 45
         
         # Environmental Level Thresholds
         self.WATER_LEVEL = 45
@@ -42,14 +42,53 @@ class World:
         }
         init_block_textures()
         resize_blocks(self.BLOCK_SIZE, self.BLOCK_SIZE)
-        
 
-    def get_surface_y(self, world_x: int) -> int:
-        """Returns the y-coordinate (in block space) of the surface at world_x."""
+    def _lerp(self, a: float, b: float, t: float) -> float:
+        """Linearly interpolates between a and b by t (clamped between 0 and 1)."""
+        t = max(0.0, min(1.0, t))
+        return a + (b - a) * t
+
+    def get_surface_y(self, world_x: int) -> tuple[int, float]:
+        """
+        Calculates the y-coordinate (in block space) dynamically based on 
+        slow-moving biome noise transitioning between Plains, Mountains, and Oceans.
+        """
+        # Query the slow biome noise. Scale determines width of biome territories.
+        biome_val = self.biome_noise([world_x / 450.0])
+        
+        # Biome parameters mapping:
+        # 1. Ocean Biome (biome_val <= -0.3)
+        #    - Low amplitude, base height placed deep below water level (45)
+        # 2. Plains/Flatland Biome (biome_val around 0.0)
+        #    - Very gentle terrain, base height resting cleanly just above water level (42)
+        # 3. Mountain Biome (biome_val >= 0.3)
+        #    - High soaring peaks with heavy rugged amplitude
+        
+        if biome_val <= -0.3:
+            # Deep Ocean
+            amplitude = -30.0
+            base_height = 56.0
+        elif biome_val < 0.0:
+            # Transition: Ocean -> Plains
+            t = (biome_val - (-0.3)) / 0.3
+            amplitude = self._lerp(4.0, 3.0, t)
+            base_height = self._lerp(56.0, 42.0, t)
+        elif biome_val < 0.3:
+            # Transition: Plains -> Mountains
+            t = biome_val / 0.3
+            amplitude = self._lerp(3.0, 36.0, t)
+            base_height = self._lerp(42.0, 24.0, t)
+        else:
+            # Soaring Alpine Mountains
+            amplitude = 100.0
+            base_height = 24.0
+
+        # Calculate standard detailed noise fluctuation
         h = self.noise([world_x / self.scale])
-        h *= self.amplitude
-        h += self.base_height
-        return round(h)
+        h *= amplitude
+        h += base_height
+        
+        return round(h), biome_val
 
     def get_chunk(self, chunk_x: int):
         if chunk_x not in self.chunks:
@@ -60,11 +99,11 @@ class World:
         chunk = {}
         for local_x in range(self.CHUNK_SIZE):
             world_x = chunk_x * self.CHUNK_SIZE + local_x
-            surface_y = self.get_surface_y(world_x)
+            surface_y, _ = self.get_surface_y(world_x)
 
             # Smooth out terrain
-            prev_surf_y = self.get_surface_y(world_x - 1)
-            next_surf_y = self.get_surface_y(world_x + 1)
+            prev_surf_y, _ = self.get_surface_y(world_x - 1)
+            next_surf_y, _ = self.get_surface_y(world_x + 1)
             if prev_surf_y == next_surf_y and surface_y != prev_surf_y:
                 surface_y = prev_surf_y
             

@@ -30,7 +30,7 @@ class Main:
         # Spawn the player dynamically above the terrain at x = 0
         spawn_x = 0
         # Calculate exact surface block y-coordinate, convert to pixels, go 200px higher
-        spawn_y = self.world.get_surface_y(0) * self.world.BLOCK_SIZE - 200
+        spawn_y= self.world.get_surface_y(0)[0] * self.world.BLOCK_SIZE - 200
         self.player = player.Player((spawn_x, spawn_y), 50) # Pos, Size
         
         # Initialize camera
@@ -109,7 +109,8 @@ class Main:
         utils.draw_text(self.screen, f"Block Pos: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
         utils.draw_text(self.screen, f"Loaded Chunks: {len(self.world.chunks)}", 40, (255, 255, 255), (10, 250))
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
-
+        utils.draw_text(self.screen, f"World Surface Y: {self.world.get_surface_y(0)[0]}", 40, (255, 255, 255), (10, 310))
+        utils.draw_text(self.screen, f"Biome Value: {self.world.get_surface_y(0)[1]:.2f}", 40, (255, 255, 255), (10, 340))
 
     def resize(self, w, h):
         """
