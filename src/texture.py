@@ -18,7 +18,7 @@ BLOCK_TEXTURE_CACHE = {
 def init_block_textures():
     global BLOCK_TEXTURE_CACHE
     sheet = SpriteSheet()
-    sheet.extract_grid(r"block_textures\Set_2.png", (32,32))
+    sheet.extract_grid(r"block_textures\Set_2.png" if os.name == "nt" else r"block_textures/Set_2.png", (32,32))
     BLOCK_TEXTURE_CACHE["Sprite_sheet"] = sheet
     __assign_blocks()
 

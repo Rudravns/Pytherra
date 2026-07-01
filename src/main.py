@@ -96,6 +96,9 @@ class pytherra:
         self.player.draw(self.screen, self.camera, self.UI_DEBUG)
 
     def debug_UI(self):
+        os.system('cls' if os.name == 'nt' else "clear")
+        print(self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE)))
+
         utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
         utils.draw_text(self.screen, f"Player Pos: {int(self.player.pos.x)}, {int(self.player.pos.y)}", 40, (255, 255, 255), (10, 40))
         utils.draw_text(self.screen, f"Velocity: {round(self.player.vel.x, 2)}, {round(self.player.vel.y, 2)}", 40, (255, 255, 255), (10, 70))

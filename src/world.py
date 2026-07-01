@@ -32,6 +32,7 @@ class World:
         self.Simple_color = False # Off gives more fps and on
         # Block colors (0: Boundary, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water, 6: Sand)
         self.COLORS = {
+            -1: (255, 255, 255), # Air (not meant to be drawn)
             0: (0, 0, 0),       # Boundary, not meant to be drawn
             1: (34, 177, 76),   # Grass
             2: (121, 85, 58),   # Dirt
