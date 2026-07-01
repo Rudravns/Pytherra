@@ -2,6 +2,9 @@ import pygame as pg
 from perlin_noise import PerlinNoise
 import math
 import utils
+from texture import BLOCK_TEXTURE_CACHE, init_block_textures, resize_blocks
+
+    
 
 class World:
     def __init__(self, seed: int = 0):
@@ -21,6 +24,8 @@ class World:
         self.amplitude = 25
         self.base_height = 45
         
+        # ====== RENDERING ============
+        self.Simple_color = False #Off gives more fps and on
         # Block colors (0: Boundry, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water)
         self.COLORS = {
             0: (0, 0, 0), # Boundry, not meant to be drawn
@@ -30,6 +35,9 @@ class World:
             4: (240, 240, 240),  # Snow
             5: (100, 150, 255) # Water
         }
+        init_block_textures()
+        resize_blocks(self.BLOCK_SIZE,self.BLOCK_SIZE)
+        
 
     def get_surface_y(self, world_x: int) -> int:
         """Returns the y-coordinate (in block space) of the surface at world_x."""
@@ -153,7 +161,14 @@ class World:
                         ry2 = ((by + 1) * self.BLOCK_SIZE - camera.y) * scale_h
                         
                         draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
-                        pg.draw.rect(screen, self.COLORS[block_id], draw_rect)
+                        if self.Simple_color:
+                            pg.draw.rect(screen, self.COLORS[block_id], draw_rect)
+                        else:
+                            try:
+                                text:pg.Surface = BLOCK_TEXTURE_CACHE[block_id]
+                                screen.blit(pg.transform.scale(text,(draw_rect.w, draw_rect.h)).convert_alpha(), draw_rect)
+                            except TypeError:
+                                pg.draw.rect(screen, self.COLORS[block_id], draw_rect) #fall back if text not exist
                     
 
 if __name__ == "__main__":

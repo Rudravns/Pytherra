@@ -4,6 +4,7 @@ import os, sys
 import random, time, threading
 import player, world, loading, utils
 
+
 class Main:
     def __init__(self):
         pg.init()
@@ -14,6 +15,7 @@ class Main:
         self.clock = pg.time.Clock()
         self.BASE_SIZE = (1000, 800)
         self.dt = 0
+
         
         # Debugs
         self.CONSOLE_DEBUG = True
@@ -23,12 +25,13 @@ class Main:
         self.seed = random.randint(0, 10000)
         self.WORLD_SIZE = 10**2 # In chunks (In blocks = self.world_size * 16)
         self.world = world.World(seed=self.seed)
+
         
         # Spawn the player dynamically above the terrain at x = 0
         spawn_x = 0
         # Calculate exact surface block y-coordinate, convert to pixels, go 200px higher
         spawn_y = self.world.get_surface_y(0) * self.world.BLOCK_SIZE - 200
-        self.player = player.Player((spawn_x, spawn_y), 80) # Pos, Size
+        self.player = player.Player((spawn_x, spawn_y), 50) # Pos, Size
         
         # Initialize camera
         self.camera = pg.Vector2(0, 0)
@@ -66,6 +69,8 @@ class Main:
                     if event.key == pg.K_r:
                         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
                         self.resize(1000, 800)
+                    if event.key == pg.K_c:
+                        self.world.Simple_color = not self.world.Simple_color
                 
                 if event.type == pg.VIDEORESIZE:
                     if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
@@ -112,9 +117,13 @@ class Main:
         because the physical logical coordinate space is kept pristine. We only apply 
         scaling factors when projecting entities to the screen!
         """
-        utils.SCALE["width"] = w / self.BASE_SIZE[0]
-        utils.SCALE["height"] = h / self.BASE_SIZE[1]
-        utils.SCALE["overall"] = (utils.SCALE["width"] + utils.SCALE["height"]) / 2
+        # Calculate a single uniform scale factor using the minimum ratio 
+        # to ensure the aspect ratio never warps/stretches.
+        uniform_scale = min(w / self.BASE_SIZE[0], h / self.BASE_SIZE[1])
+        # I will not go everywhere to change from w and h to uniform_scale, so I will just set both width and height to the same value0000000000000
+        utils.SCALE["width"] = uniform_scale
+        utils.SCALE["height"] = uniform_scale
+        utils.SCALE["overall"] = uniform_scale
 
         utils.cache.clear() # Clear the text cache to regenerate fonts with new sizes
 
