@@ -24,19 +24,24 @@ class World:
         self.amplitude = 25
         self.base_height = 45
         
+        # Environmental Level Thresholds
+        self.WATER_LEVEL = 45
+        self.SNOW_LEVEL = 35
+        
         # ====== RENDERING ============
-        self.Simple_color = False #Off gives more fps and on
-        # Block colors (0: Boundry, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water)
+        self.Simple_color = False # Off gives more fps and on
+        # Block colors (0: Boundary, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water, 6: Sand)
         self.COLORS = {
-            0: (0, 0, 0), # Boundry, not meant to be drawn
+            0: (0, 0, 0),       # Boundary, not meant to be drawn
             1: (34, 177, 76),   # Grass
             2: (121, 85, 58),   # Dirt
             3: (128, 128, 128), # Stone
-            4: (240, 240, 240),  # Snow
-            5: (100, 150, 255) # Water
+            4: (240, 240, 240), # Snow
+            5: (100, 150, 255), # Water
+            6: (244, 228, 179)  # Sand
         }
         init_block_textures()
-        resize_blocks(self.BLOCK_SIZE,self.BLOCK_SIZE)
+        resize_blocks(self.BLOCK_SIZE, self.BLOCK_SIZE)
         
 
     def get_surface_y(self, world_x: int) -> int:
@@ -55,44 +60,45 @@ class World:
         chunk = {}
         for local_x in range(self.CHUNK_SIZE):
             world_x = chunk_x * self.CHUNK_SIZE + local_x
-            #print(world_x)
             surface_y = self.get_surface_y(world_x)
-            #print(surface_y)
 
             # Smooth out terrain
             prev_surf_y = self.get_surface_y(world_x - 1)
             next_surf_y = self.get_surface_y(world_x + 1)
-            if prev_surf_y == next_surf_y and surface_y != prev_surf_y: # <-- could also check for next_surf_y
-                surface_y = prev_surf_y # could also set surface_y to next_surf_y
+            if prev_surf_y == next_surf_y and surface_y != prev_surf_y:
+                surface_y = prev_surf_y
             
             column = {}
             # Generate column downwards
             if boundry:
                 start = 0
             else:
-                if surface_y < 45:
-                    start = surface_y
-                else:
-                    start = 45
+                # Ensure we start generation high enough to fill water cavities up to the waterline
+                start = min(surface_y, self.WATER_LEVEL)
+                
             for y in range(start, surface_y + self.DEPTH_LIMIT):
                 depth = y - surface_y
                 
                 if depth == 0:
-                    # Peaks (lower y coordinate values) get snow
-                    if y < 35:
-                        block = 4
-                    elif y > 45:
-                        block = 5
+                    # Solid surface ground layer
+                    if y < self.SNOW_LEVEL:
+                        block = 4 # Snow
+                    elif y >= self.WATER_LEVEL:
+                        block = 6 # Sand (Lakebed underwater)
+                    elif y == self.WATER_LEVEL - 1:
+                        block = 6 # Sand (Sandy beach shoreline right at water's edge)
                     else:
-                        block = 1
+                        block = 1 # Grass
                 elif depth < 0:
-                    #print("Good")
-                    if boundry: block = 0
-                    block = 5
+                    # Cavity space above surface but below water level gets filled with liquid water
+                    if boundry: 
+                        block = 0
+                    else:
+                        block = 5 # Water
                 elif depth < 4:
-                    block = 2
+                    block = 2 # Sub-surface dirt
                 else:
-                    block = 3
+                    block = 3 # Core stone
                     
                 column[y] = block
             chunk[local_x] = column
@@ -107,9 +113,9 @@ class World:
         
         return True
 
-    def get_nearby_rects(self, player_rect: pg.Rect) -> list[pg.Rect]:
+    def get_nearby_rects(self, player_rect: pg.Rect) -> dict[int, list[pg.Rect]]:
         """Fetches block rects only in the immediate vicinity of the player."""
-        rects = []
+        dict_rects = {}
         
         # Calculate block coordinate bounds based on player rect + a 1-block margin
         start_bx = int((player_rect.left - self.BLOCK_SIZE) // self.BLOCK_SIZE)
@@ -125,9 +131,11 @@ class World:
             if local_x in chunk:
                 for by in range(start_by, end_by + 1):
                     if by in chunk[local_x]:
-                        rects.append(pg.Rect(bx * self.BLOCK_SIZE, by * self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE))
-        
-        return rects
+                        if chunk[local_x][by] not in dict_rects:
+                            dict_rects[chunk[local_x][by]] = []
+                        dict_rects[chunk[local_x][by]].append(pg.Rect(bx * self.BLOCK_SIZE, by * self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE))
+    
+        return dict_rects
 
     def draw(self, screen: pg.Surface, camera: pg.Vector2):
         w, h = screen.get_size()
@@ -167,8 +175,8 @@ class World:
                             try:
                                 text:pg.Surface = BLOCK_TEXTURE_CACHE[block_id]
                                 screen.blit(pg.transform.scale(text,(draw_rect.w, draw_rect.h)).convert_alpha(), draw_rect)
-                            except TypeError:
-                                pg.draw.rect(screen, self.COLORS[block_id], draw_rect) #fall back if text not exist
+                            except (TypeError, KeyError):
+                                pg.draw.rect(screen, self.COLORS[block_id], draw_rect) # Fallback if texture asset doesn't exist
                     
 
 if __name__ == "__main__":
