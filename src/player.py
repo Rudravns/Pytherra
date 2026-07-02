@@ -17,6 +17,7 @@ class Player:
         self.GRAVITY = 2000   # Downward pull in px/s^2
         self.JUMP = 600      # Upward instantaneous impulse in px/s
         self.MAX_STEP = 32    # Maximum height they can walk over smoothly
+        self.NO_CLIP = False   # If True, player ignores collisions entirely
         
         self.vel = pg.Vector2(0, 0)
         self.jump = True
@@ -115,6 +116,21 @@ class Player:
         if self.pos.y > 6000:
             self.pos.y = -1000
             self.vel.y = 0
+
+    def no_clip(self, keys):
+        self.vel.x = 0
+        self.vel.y = 0
+        if keys[pg.K_LEFT] or keys[pg.K_a]:
+            self.pos.x -= self.MAX_SPEED // 10
+        if keys[pg.K_RIGHT] or keys[pg.K_d]:
+            self.pos.x += self.MAX_SPEED // 10
+        if keys[pg.K_UP] or keys[pg.K_w]:
+            self.pos.y -= self.MAX_SPEED // 10
+        if keys[pg.K_DOWN] or keys[pg.K_s]:
+            self.pos.y += self.MAX_SPEED // 10
+        
+        self.rect.x = int(self.pos.x)
+        self.rect.y = int(self.pos.y)
 
     def check_collision(self, world_rects: dict[int, list[pg.Rect]], axis: str):
         block_collided_with = False

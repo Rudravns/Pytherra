@@ -96,6 +96,16 @@ class World:
             self.generate_chunk(chunk_x, boundry=False)
         return self.chunks[chunk_x]
 
+    def get_chunk_from_pos(self, world_x: int) -> tuple[int, int]:
+        block_x = int(world_x // self.BLOCK_SIZE)
+        keys = list(self.chunks.keys())
+        keys.sort()
+
+        block_x += abs(keys[0] * self.CHUNK_SIZE)
+        chunk_x = block_x // self.CHUNK_SIZE
+
+        return chunk_x, block_x
+
     def generate_chunk(self, chunk_x: int, boundry: bool = False):
         chunk = {}
         for local_x in range(self.CHUNK_SIZE):
@@ -177,7 +187,7 @@ class World:
     
         return dict_rects
 
-    def draw(self, screen: pg.Surface, camera: pg.Vector2):
+    def draw(self, screen: pg.Surface, camera: pg.Vector2, debug: bool = False):
         w, h = screen.get_size()
         scale_w, scale_h = utils.SCALE["width"], utils.SCALE["height"]
         
@@ -193,10 +203,17 @@ class World:
         start_by = int(start_world_y // self.BLOCK_SIZE)
         end_by = int(end_world_y // self.BLOCK_SIZE)
         
+        #start = (start_bx - camera.x + self.BLOCK_SIZE / 2) * scale_w
+        #pg.draw.line(screen, (255, 0, 0), (start, 0), (start, h), 1)
+
+        block = []
+        
         for bx in range(start_bx, end_bx + 1):
             chunk_x = bx // self.CHUNK_SIZE
             local_x = bx % self.CHUNK_SIZE
             chunk = self.get_chunk(chunk_x)
+
+            block.append(bx)
             
             if local_x in chunk:
                 for by, block_id in chunk[local_x].items():
@@ -217,7 +234,14 @@ class World:
                                 screen.blit(pg.transform.scale(text,(draw_rect.w, draw_rect.h)).convert_alpha(), draw_rect)
                             except (TypeError, KeyError):
                                 pg.draw.rect(screen, self.COLORS[block_id], draw_rect) # Fallback if texture asset doesn't exist
-                    
+
+        if debug:      
+            for x in block:
+                start = x * self.BLOCK_SIZE
+                check = self.get_chunk_from_pos(start)[1]
+                if check % self.CHUNK_SIZE == 0:
+                    rx1 = (start - camera.x) * scale_w
+                    pg.draw.line(screen, (255, 0, 0), (rx1, 0), (rx1, h), 1)
 
 if __name__ == "__main__":
     w = World()

@@ -20,12 +20,12 @@ class pytherra:
         # Debugs
         self.CONSOLE_DEBUG = True
         self.UI_DEBUG = True
+        self.GAME_DEBUG = True
 
         # Generate seed and World
         self.seed = random.randint(0, 10000) if seed is None else seed
         self.WORLD_SIZE = 10**2 # In chunks (In blocks = self.world_size * 16)
         self.world = world.World(seed=self.seed)
-        
 
         # Spawn the player dynamically above the terrain at x = 0
         spawn_x = 0
@@ -45,6 +45,8 @@ class pytherra:
         while True:
             # Clear screen (Sky blue)
             self.screen.fill((135, 206, 235)) 
+
+            os.system('cls' if os.name == 'nt' else "clear")
             
             # Limit to 120 FPS, get delta time in seconds
             self.dt = self.clock.tick(120) / 1000.0 
@@ -55,6 +57,8 @@ class pytherra:
 
             if self.UI_DEBUG: 
                 self.debug_UI()
+            if self.CONSOLE_DEBUG:
+                self.debug_console()
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -68,7 +72,17 @@ class pytherra:
                         self.resize(1000, 800)
                     if event.key == pg.K_c:
                         self.world.Simple_color = not self.world.Simple_color
-                
+                    if event.key == pg.K_e and self.GAME_DEBUG:
+                        self.player.NO_CLIP = not self.player.NO_CLIP
+                    
+                    # Debug toggles
+                    if event.key == pg.K_F1:
+                        self.GAME_DEBUG = not self.GAME_DEBUG
+                    if event.key == pg.K_F2:
+                        self.CONSOLE_DEBUG = not self.CONSOLE_DEBUG
+                    if event.key == pg.K_F3:
+                        self.UI_DEBUG = not self.UI_DEBUG
+
                 if event.type == pg.VIDEORESIZE:
                     if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
                     self.resize(event.w, event.h)
@@ -80,7 +94,8 @@ class pytherra:
         nearby_rects = self.world.get_nearby_rects(self.player.rect)
         
         # Update physical world state
-        self.player.update(keys, nearby_rects, self.dt)
+        if self.player.NO_CLIP: self.player.no_clip(keys)
+        else: self.player.update(keys, nearby_rects, self.dt)
         
         # LERP (smoothly animate) camera to follow player accounting for current zoom scale
         target_x = self.player.rect.centerx - (self.screen.get_width() / 2) / utils.SCALE["width"]
@@ -92,13 +107,10 @@ class pytherra:
 
     def draw(self):
         # Draw everything relatively to the camera
-        self.world.draw(self.screen, self.camera)
-        self.player.draw(self.screen, self.camera, self.UI_DEBUG)
+        self.world.draw(self.screen, self.camera, self.GAME_DEBUG)
+        self.player.draw(self.screen, self.camera, self.GAME_DEBUG)
 
     def debug_UI(self):
-        os.system('cls' if os.name == 'nt' else "clear")
-        print(self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE)))
-
         utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
         utils.draw_text(self.screen, f"Player Pos: {int(self.player.pos.x)}, {int(self.player.pos.y)}", 40, (255, 255, 255), (10, 40))
         utils.draw_text(self.screen, f"Velocity: {round(self.player.vel.x, 2)}, {round(self.player.vel.y, 2)}", 40, (255, 255, 255), (10, 70))
@@ -109,7 +121,13 @@ class pytherra:
         utils.draw_text(self.screen, f"Block Pos: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
         utils.draw_text(self.screen, f"Loaded Chunks: {len(self.world.chunks)}", 40, (255, 255, 255), (10, 250))
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
+        utils.draw_text(self.screen, f"Current Chunk: {self.world.get_chunk_from_pos(int(self.player.pos.x))[0]}", 40, (255, 255, 255), (10, 310))
 
+
+    def debug_console(self):
+        chunk = self.world.get_chunk_from_pos(int(self.player.pos.x))
+        surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))[0]
+        print(chunk, surface)
 
     def resize(self, w, h):
         """
