@@ -24,8 +24,8 @@ class Player:
         self.collide = ""
         self.in_water = False # Track if player is currently submerged
 
-        self.collidable = [1, 2, 3, 4, 6] # Block IDs that the player can collide with (Grass, Dirt, Stone, Snow, Sand)
-        self.semi_collidable = [5]        # Block IDs that the player can pass through with fluid physics (Water)
+        self.collidable = [1, 2, 3, 4, 5, 6] # Block IDs that the player can collide with (Grass, Dirt, Stone, Snow, Sand)
+        self.semi_collidable = [7]        # Block IDs that the player can pass through with fluid physics (Water)
         self.not_collidable = [0]         # Block IDs that the player completely ignores (Air)
 
     def update(self, keys, world_rects: dict[int, list[pg.Rect]], dt: float):

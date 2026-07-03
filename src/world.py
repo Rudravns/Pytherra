@@ -33,13 +33,14 @@ class World:
         # Block colors (0: Boundary, 1: Grass, 2: Dirt, 3: Stone, 4: Snow, 5: Water, 6: Sand)
         self.COLORS = {
             -1: (255, 255, 255), # Air (not meant to be drawn)
-            0: (0, 0, 0),       # Boundary, not meant to be drawn
+            0: (0, 0, 0), # Boundry, not meant to be drawn
             1: (34, 177, 76),   # Grass
             2: (121, 85, 58),   # Dirt
             3: (128, 128, 128), # Stone
-            4: (240, 240, 240), # Snow
-            5: (100, 150, 255), # Water
-            6: (244, 228, 179)  # Sand
+            4: (90, 90, 90), # Cobblestone
+            5: (240, 240, 240),  # Snow
+            6: (244, 228, 179), # Sand
+            7: (100, 150, 255), # Water
         }
         init_block_textures()
         resize_blocks(self.BLOCK_SIZE, self.BLOCK_SIZE)
@@ -132,7 +133,7 @@ class World:
                 if depth == 0:
                     # Solid surface ground layer
                     if y < self.SNOW_LEVEL:
-                        block = 4 # Snow
+                        block = 5 # Snow
                     elif y >= self.WATER_LEVEL:
                         block = 6 # Sand (Lakebed underwater)
                     elif y == self.WATER_LEVEL - 1:
@@ -144,7 +145,7 @@ class World:
                     if boundry: 
                         block = 0
                     else:
-                        block = 5 # Water
+                        block = 7 # Water
                 elif depth < 4:
                     block = 2 # Sub-surface dirt
                 else:

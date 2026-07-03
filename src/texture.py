@@ -10,15 +10,17 @@ BLOCK_TEXTURE_CACHE = {
     1: (34, 177, 76),   # Grass
     2: (121, 85, 58),   # Dirt
     3: (128, 128, 128), # Stone
-    4: (240, 240, 240),  # Snow
-    5: (100, 150, 255), # Water
+    4: (90, 90, 90), # Cobblestone
+    5: (240, 240, 240),  # Snow
+    6: (244, 228, 179), # Sand
+    7: (100, 150, 255), # Water
     "Sprite_sheet" : None #spritesheet cache
 }
 
 def init_block_textures():
     global BLOCK_TEXTURE_CACHE
     sheet = SpriteSheet()
-    sheet.extract_grid(r"block_textures\Set_2.png" if os.name == "nt" else r"block_textures/Set_2.png", (32,32))
+    sheet.extract_grid(r"block_textures\Sheet.png" if os.name == "nt" else r"block_textures/Sheet.png", (32,32))
     BLOCK_TEXTURE_CACHE["Sprite_sheet"] = sheet
     __assign_blocks()
 
@@ -37,7 +39,9 @@ def __assign_blocks():
     BLOCK_TEXTURE_CACHE[2] = sheet.get_image(1)
     BLOCK_TEXTURE_CACHE[3] = sheet.get_image(2)
     BLOCK_TEXTURE_CACHE[4] = sheet.get_image(3)
-    
+    BLOCK_TEXTURE_CACHE[5] = sheet.get_image(4)
+    BLOCK_TEXTURE_CACHE[6] = sheet.get_image(5)
+    #BLOCK_TEXTURE_CACHE[7] = sheet.get_image(6)
 
 def load_image(path: str) -> pygame.Surface:
     """Load an image from disk with alpha support."""
