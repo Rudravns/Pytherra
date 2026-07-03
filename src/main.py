@@ -73,7 +73,7 @@ class pytherra:
                     if event.key == pg.K_c:
                         self.world.Simple_color = not self.world.Simple_color
                     if event.key == pg.K_e and self.GAME_DEBUG:
-                        self.player.NO_CLIP = not self.player.NO_CLIP
+                        self.player.NO_CLIP = not self.player.NO_CLIP # pyright: ignore[reportAttributeAccessIssue]
                     
                     # Debug toggles
                     if event.key == pg.K_F1:
@@ -126,7 +126,7 @@ class pytherra:
 
     def debug_console(self):
         chunk = self.world.get_chunk_from_pos(int(self.player.pos.x))
-        surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))[0]
+        surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))
         print(chunk, surface)
 
     def resize(self, w, h):
