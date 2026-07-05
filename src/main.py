@@ -2,7 +2,7 @@
 import pygame as pg
 import os, sys
 import random, time, threading
-import player, world, loading, utils
+import player, mouse, world, loading, utils
 
 
 class pytherra:
@@ -33,6 +33,9 @@ class pytherra:
         spawn_y = self.world.get_surface_y(0)[0] * self.world.BLOCK_SIZE - 200
         self.player = player.Player((spawn_x, spawn_y), 50) # Pos, Size
         
+        # Mouse
+        self.mouse = mouse.Mouse(size=self.world.BLOCK_SIZE)
+
         # Initialize camera
         self.camera = pg.Vector2(0, 0)
 
@@ -59,6 +62,10 @@ class pytherra:
                 self.debug_UI()
             if self.CONSOLE_DEBUG:
                 self.debug_console()
+            if self.GAME_DEBUG:
+                self.mouse.INSTANT = True # type: ignore
+            else:
+                self.mouse.INSTANT = False
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -82,6 +89,12 @@ class pytherra:
                         self.CONSOLE_DEBUG = not self.CONSOLE_DEBUG
                     if event.key == pg.K_F3:
                         self.UI_DEBUG = not self.UI_DEBUG
+                    
+                    # Zooming
+                    if event.key == pg.K_EQUALS:
+                        utils.SCALE["zoom"] += 0.1
+                    if event.key == pg.K_MINUS:
+                        utils.SCALE["zoom"] -= 0.1
 
                 if event.type == pg.VIDEORESIZE:
                     if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
@@ -91,15 +104,18 @@ class pytherra:
 
     def update_game(self, keys):
         # Get active blocks ONLY around the player
-        nearby_rects = self.world.get_nearby_rects(self.player.rect)
+        nearby_rects, _ = self.world.get_nearby_rects(self.player.rect)
         
         # Update physical world state
         if self.player.NO_CLIP: self.player.no_clip(keys)
         else: self.player.update(keys, nearby_rects, self.dt)
+
+        # Update mouse
+        self.mouse.update(self.player, self.world, self.camera, self.dt)
         
         # LERP (smoothly animate) camera to follow player accounting for current zoom scale
-        target_x = self.player.rect.centerx - (self.screen.get_width() / 2) / utils.SCALE["width"]
-        target_y = self.player.rect.centery - (self.screen.get_height() / 2) / utils.SCALE["height"]
+        target_x = self.player.rect.centerx - (self.screen.get_width() / 2) / (utils.SCALE["width"] * utils.SCALE["zoom"])
+        target_y = self.player.rect.centery - (self.screen.get_height() / 2) / (utils.SCALE["height"] * utils.SCALE["zoom"])
         
         # Higher multiplier = faster, snapier camera
         self.camera.x += (target_x - self.camera.x) * 10 * self.dt
@@ -109,6 +125,7 @@ class pytherra:
         # Draw everything relatively to the camera
         self.world.draw(self.screen, self.camera, self.GAME_DEBUG)
         self.player.draw(self.screen, self.camera, self.GAME_DEBUG)
+        self.mouse.draw(self.screen, self.camera)
 
     def debug_UI(self):
         utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
@@ -116,18 +133,22 @@ class pytherra:
         utils.draw_text(self.screen, f"Velocity: {round(self.player.vel.x, 2)}, {round(self.player.vel.y, 2)}", 40, (255, 255, 255), (10, 70))
         utils.draw_text(self.screen, f"Grounded (not jump): {not self.player.jump}", 40, (255, 255, 255), (10, 100))
         utils.draw_text(self.screen, f"Collision: {self.player.collide}", 40, (255, 255, 255), (10, 130))
-        utils.draw_text(self.screen, f"Scale: W:{round(utils.SCALE['width'], 2)}, H:{round(utils.SCALE['height'],2)}", 40, (255, 255, 255), (10, 160))
+        utils.draw_text(self.screen, f"Scale: W:{round(utils.SCALE['width'], 2)}, H:{round(utils.SCALE['height'],2)}, O:{round(utils.SCALE['overall'],2)}, Z:{round(utils.SCALE['zoom'],2)}", 40, (255, 255, 255), (10, 160))
         utils.draw_text(self.screen, f"Seed: {self.seed}", 40, (255, 255, 255), (10, 190))
         utils.draw_text(self.screen, f"Block Pos: {self.player.pos.x//self.world.BLOCK_SIZE}, {self.player.pos.y//self.world.BLOCK_SIZE}", 40, (255, 255, 255), (10, 220))
         utils.draw_text(self.screen, f"Loaded Chunks: {len(self.world.chunks)}", 40, (255, 255, 255), (10, 250))
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
         utils.draw_text(self.screen, f"Current Chunk: {self.world.get_chunk_from_pos(int(self.player.pos.x))[0]}", 40, (255, 255, 255), (10, 310))
-
+        utils.draw_text(self.screen, f"Hold Tick: {self.mouse.hold_tick}", 40, (255, 255, 255), (10, 340))
+        utils.draw_text(self.screen, f"Mouse Pos: {self.mouse.pos}", 40, (255, 255, 255), (10, 370))
 
     def debug_console(self):
         chunk = self.world.get_chunk_from_pos(int(self.player.pos.x))
         surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))
         print(chunk, surface)
+        print(self.mouse.pos)
+        #print(self.world.debug)
+        print(self.mouse.debug)
 
     def resize(self, w, h):
         """

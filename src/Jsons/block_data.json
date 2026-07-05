@@ -1,0 +1,92 @@
+{
+    "-1": {
+        "name": "Air",
+        "collidable": false,
+        "semicollidable": false,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": null
+    },
+    "0": {
+        "name": "Barrier",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": null
+    },
+    "1": {
+        "name": "Grass",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 80,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 2
+    },
+    "2": {
+        "name": "Dirt",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 80,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": null
+    },
+    "3": {
+        "name": "Stone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 800,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": 4
+    },
+    "4": {
+        "name": "Cobblestone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 1000,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": null
+    },
+    "5": {
+        "name": "Snow",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 80,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 1
+    },
+    "6": {
+        "name": "Sand",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": null
+    },
+    "7": {
+        "name": "Water",
+        "collidable": false,
+        "semicollidable": true,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": null
+    }
+}

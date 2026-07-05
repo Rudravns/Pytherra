@@ -5,7 +5,8 @@ cache = {} #only text
 SCALE = { #W/H ratio
             "width": 1.0,
             "height": 1.0,
-            "overall": 1.0
+            "overall": 1.0,
+            "zoom": 1.6
         }
 RESIZED = False
 

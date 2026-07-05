@@ -28,6 +28,19 @@ class Player:
         self.semi_collidable = [7]        # Block IDs that the player can pass through with fluid physics (Water)
         self.not_collidable = [0]         # Block IDs that the player completely ignores (Air)
 
+        #Inventory
+        self.inventory = self.setup_inventory()
+        self.hold = self.inventory[5][0]
+    
+    def setup_inventory(self):
+        inv = []
+        for x in range(6):
+            row = []
+            for y in range(9):
+                row.append(None)
+            inv.append(row)
+        return inv
+
     def update(self, keys, world_rects: dict[int, list[pg.Rect]], dt: float):
         # Prevent physics explosions during lag spikes (e.g. window dragging)
         if dt > 0.05: 
@@ -188,12 +201,12 @@ class Player:
 
     def draw(self, screen: pg.Surface, camera: pg.Vector2, hbox=False):
         # Draw scales to exactly what utils.SCALE demands, leaving logic untouched
-        scale_w, scale_h = utils.SCALE["width"], utils.SCALE["height"]
+        w, h, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["zoom"]
         
-        rx1 = (self.rect.x - camera.x) * scale_w
-        ry1 = (self.rect.y - camera.y) * scale_h
-        rx2 = (self.rect.right - camera.x) * scale_w
-        ry2 = (self.rect.bottom - camera.y) * scale_h
+        rx1 = (self.rect.x - camera.x) * (w * z)
+        ry1 = (self.rect.y - camera.y) * (h * z)
+        rx2 = (self.rect.right - camera.x) * (w * z)
+        ry2 = (self.rect.bottom - camera.y) * (h * z)
         
         draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
         

@@ -15,6 +15,9 @@ class World:
         
         # Data structure: self.chunks[chunk_x][local_x][y] = block_id
         self.chunks = {}
+
+        # Debug
+        self.debug = []
         
         # Engine parameters
         self.BLOCK_SIZE = 32
@@ -105,10 +108,13 @@ class World:
         block_x += abs(keys[0] * self.CHUNK_SIZE)
         chunk_x = block_x // self.CHUNK_SIZE
 
-        return chunk_x, block_x
+        chunks = len(self.chunks)
+
+        return chunk_x - chunks // 2, block_x
 
     def generate_chunk(self, chunk_x: int, boundry: bool = False):
         chunk = {}
+
         for local_x in range(self.CHUNK_SIZE):
             world_x = chunk_x * self.CHUNK_SIZE + local_x
             surface_y, _ = self.get_surface_y(world_x)
@@ -126,6 +132,8 @@ class World:
             else:
                 # Ensure we start generation high enough to fill water cavities up to the waterline
                 start = min(surface_y, self.WATER_LEVEL)
+                if chunk_x == 0: self.debug.append(start)
+                #start = surface_y if surface_y < self.WATER_LEVEL else self.WATER_LEVEL
                 
             for y in range(start, surface_y + self.DEPTH_LIMIT):
                 depth = y - surface_y
@@ -164,9 +172,10 @@ class World:
         
         return True
 
-    def get_nearby_rects(self, player_rect: pg.Rect) -> dict[int, list[pg.Rect]]:
+    def get_nearby_rects(self, player_rect: pg.Rect): #-> dict[int, list[pg.Rect]]:
         """Fetches block rects only in the immediate vicinity of the player."""
         dict_rects = {}
+        raw_data = {}
         
         # Calculate block coordinate bounds based on player rect + a 1-block margin
         start_bx = int((player_rect.left - self.BLOCK_SIZE) // self.BLOCK_SIZE)
@@ -184,19 +193,21 @@ class World:
                     if by in chunk[local_x]:
                         if chunk[local_x][by] not in dict_rects:
                             dict_rects[chunk[local_x][by]] = []
+                            raw_data[chunk[local_x][by]] = []
                         dict_rects[chunk[local_x][by]].append(pg.Rect(bx * self.BLOCK_SIZE, by * self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE))
+                        raw_data[chunk[local_x][by]].append((bx, by, chunk[local_x]))
     
-        return dict_rects
+        return dict_rects, raw_data
 
     def draw(self, screen: pg.Surface, camera: pg.Vector2, debug: bool = False):
         w, h = screen.get_size()
-        scale_w, scale_h = utils.SCALE["width"], utils.SCALE["height"]
+        scale_w, scale_h, scale_z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["zoom"]
         
         # Calculate camera view bounds in logical world coordinates
         start_world_x = camera.x
-        end_world_x = camera.x + w / scale_w
+        end_world_x = camera.x + w / (scale_w * scale_z)
         start_world_y = camera.y
-        end_world_y = camera.y + h / scale_h
+        end_world_y = camera.y + h / (scale_h * scale_z)
         
         # Convert to block coordinates to efficiently iterate
         start_bx = int(start_world_x // self.BLOCK_SIZE)
@@ -221,10 +232,10 @@ class World:
                     # Only draw blocks that are inside the vertical view bounds
                     if start_by <= by <= end_by:
                         # Calculate screen positions accurately to avoid floating point seams
-                        rx1 = (bx * self.BLOCK_SIZE - camera.x) * scale_w
-                        ry1 = (by * self.BLOCK_SIZE - camera.y) * scale_h
-                        rx2 = ((bx + 1) * self.BLOCK_SIZE - camera.x) * scale_w
-                        ry2 = ((by + 1) * self.BLOCK_SIZE - camera.y) * scale_h
+                        rx1 = (bx * self.BLOCK_SIZE - camera.x) * (scale_w * scale_z)
+                        ry1 = (by * self.BLOCK_SIZE - camera.y) * (scale_h * scale_z)
+                        rx2 = ((bx + 1) * self.BLOCK_SIZE - camera.x) * (scale_w * scale_z)
+                        ry2 = ((by + 1) * self.BLOCK_SIZE - camera.y) * (scale_h * scale_z)
                         
                         draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
                         if self.Simple_color:
@@ -241,7 +252,7 @@ class World:
                 start = x * self.BLOCK_SIZE
                 check = self.get_chunk_from_pos(start)[1]
                 if check % self.CHUNK_SIZE == 0:
-                    rx1 = (start - camera.x) * scale_w
+                    rx1 = (start - camera.x) * (scale_w * scale_z)
                     pg.draw.line(screen, (255, 0, 0), (rx1, 0), (rx1, h), 1)
 
 if __name__ == "__main__":
