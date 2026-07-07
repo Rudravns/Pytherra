@@ -19,13 +19,15 @@ class Mouse():
         self.block = None
         self.INSTANT = False
 
-        # Get Block data
+        # Blocks
         self.block_data = json.load(open("src/Jsons/block_data.json", "r"))
+        self.hold = None
+        self.deposit = None
 
         #debug
         self.debug = None
 
-    def update(self, player, world, camera: pg.Vector2, dt: float = 0):
+    def update(self, player, world, camera: pg.Vector2, button: tuple[int, int, int], dt: float = 0):
         # Prevent hold_tick explosions during lag spikes (e.g. window dragging)
         if dt > 0.05: 
             dt = 0.05 
@@ -38,8 +40,9 @@ class Mouse():
         mouse_y = (raw_y / (utils.SCALE["height"] * utils.SCALE["zoom"])) + camera.y
         
         # Snap to world grid
-        mouse_x -= mouse_x % self.size
-        mouse_y -= mouse_y % self.size
+        if not player.show_inv:
+            mouse_x -= mouse_x % self.size
+            mouse_y -= mouse_y % self.size
         
         # Update rect
         self.rect.x = int(mouse_x)
@@ -61,18 +64,19 @@ class Mouse():
         #print(rects)
 
         # Mouse Inputs
-        button = pg.mouse.get_pressed()
-        
-        if button[0]: # Left click
-            self.left_click(world, dt)
-        elif button[2]: # Right click
-            self.right_click(player, world)
+        if not player.show_inv:
+            if button[0]: # Left click
+                self.left_click(player, world, dt)
+            elif button[2]: # Right click
+                self.right_click(player, world)
 
         if not button[0]:
             #self.debug = "Not Button"
             self.hold_tick = 0
             self.block = None
-    
+        
+        if player.show_inv: self.inventory(player, camera, click=button)
+
     def reposition(self, a, b, c):
         if a-b > c:
             return (b+c) + (b+c) % self.size
@@ -81,7 +85,7 @@ class Mouse():
         else:
             return a
 
-    def left_click(self, world, dt):
+    def left_click(self, player, world, dt):
         rects, raw = world.get_nearby_rects(self.rect)
         for block_id, rect_list in rects.items():
             for w in rect_list:
@@ -96,18 +100,18 @@ class Mouse():
                                 self.hold_tick += multiplier + dt
 
                             if self.hold_tick >= self.block_data[str(block_id)]["time"]:
-                                self.remove_block(raw, world, block_id)
+                                self.remove_block(raw, player, world, block_id)
                                 self.hold_tick = 0
                         else:
                             self.block = block_id
                             self.hold_tick = 0
                     return
-    
+
     def determine_multiplier(self, tool) -> float:
         # Once player inventory is implemented, finish this function
         return 1.0
     
-    def remove_block(self, raw, world, id):
+    def remove_block(self, raw, player, world, id):
         pos = pg.Vector2(self.pos.x // self.size, self.pos.y // self.size)
         for block in raw[id]:
             if block[0] == pos.x and block[1] == pos.y:
@@ -116,28 +120,22 @@ class Mouse():
                 for y in level:
                     if level[y] == id or (level[y] == 6 and id == 1):
                         if pos.y == y:
+                            # Remember to modify this when silk touch support comes
+                            player.update_inv(self.block_data, id=self.block_data[str(id)]["drop"])
                             del world.chunks[chunk][x % self.size][y]
                             break
+                    """
                     else:
                         debug = []
                         for n in world.chunks[0].keys():
                             debug.append(world.get_surface_y(n)[0])
                         self.debug = debug
-
-        """
-        data = world.get_chunk_from_pos(int(self.pos.x))
-        chunk = world.chunks[data[0]]
-        x = chunk[data[1] % world.CHUNK_SIZE]
-        self.debug = world.get_surface_y(int(self.pos.x // world.BLOCK_SIZE))[0]
-        self.debug = x
-        """
-        # I need help with removing
+                    """
 
     def right_click(self, player, world):
         rects, _ = world.get_nearby_rects(self.rect)
         if len(rects) > 0:
             # Checks if you are colliding with something
-            self.debug = rects.items()
             cont = False
             for _, rect_list in rects.items():
                 for w in rect_list:
@@ -158,9 +156,8 @@ class Mouse():
                 # Temporarily places cobblestone until inventory is finished
                 world.chunks[chunk[0]][x][self.pos.y // self.size] = 4
 
-
-    def draw(self, screen: pg.Surface, camera: pg.Vector2):     
-        w, h, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["zoom"]
+    def draw(self, screen: pg.Surface, player, world, camera: pg.Vector2):     
+        w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
 
         rx = (self.rect.x - camera.x) * (w * z)
         ry = (self.rect.y - camera.y) * (h * z)
@@ -172,4 +169,53 @@ class Mouse():
         
         # Draw mouse cursor, scaling the thickness slightly if scaled up heavily
         line_thickness = max(1, int(1 * (w * z)))
-        pg.draw.rect(screen, (0, 0, 0), draw_rect, line_thickness)
+        if player.show_inv: 
+            if not self.hold == None:
+                draw_rect.w = math.floor(30 * o)
+                draw_rect.h = draw_rect.w
+                world.draw_rect(screen, draw_rect, self.hold[0])
+                utils.draw_text(screen, f"x{self.hold[1]}", 20, (255, 255, 255), (math.floor(draw_rect.x + 15), math.floor(draw_rect.y + 15)))
+        else:
+            pg.draw.rect(screen, (0, 0, 0), draw_rect, line_thickness)
+    
+    def inventory(self, player, camera, click: tuple, scroll: int=0):
+        w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
+
+        if scroll == 0:
+            rx = (self.rect.x - camera.x) * (w * z)
+            ry = (self.rect.y - camera.y) * (h * z)
+            curser_rect = pg.Rect(math.floor(rx), math.floor(ry), 1, 1)
+            
+            for row in player.inv_rects:
+                for rect in row:
+                    if curser_rect.colliderect(rect):
+                        a = player.inv_rects.index(row)
+                        b = player.inv_rects[a].index(rect)
+                        if self.hold_tick == 0 and (click[0] or click[2]):
+                            if click[0]:
+                                self.hold = player.update_inv(self.block_data, hold=self.hold, location=[a, b])
+                            elif click[2]:
+                                cont = True
+                                if self.hold == None:
+                                    self.hold = player.update_inv(self.block_data, hold=self.hold, location=[a, b])
+                                elif player.inv_rects[a][b] == None:
+                                    pass
+                                else:
+                                    cont = self.hold[0] == player.inv_rects[a][b][0]
+                                
+                                if not self.hold == None and cont:
+                                    self.deposit = [self.hold[0], math.ceil(self.hold[1] / 2)]
+                                    self.hold[1] -= self.deposit[1]
+                                    if self.hold[1] == 0:
+                                        self.hold = None
+                                    
+                                    if self.deposit[1] > 0:
+                                        player.update_inv(self.block_data, hold=self.deposit, location=[a, b])
+
+                        else:
+                            pass
+
+                        if click[0] or click[2]:
+                            self.hold_tick += 1
+                        else:
+                            self.hold_tick = 0

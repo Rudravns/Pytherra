@@ -237,15 +237,8 @@ class World:
                         rx2 = ((bx + 1) * self.BLOCK_SIZE - camera.x) * (scale_w * scale_z)
                         ry2 = ((by + 1) * self.BLOCK_SIZE - camera.y) * (scale_h * scale_z)
                         
-                        draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
-                        if self.Simple_color:
-                            pg.draw.rect(screen, self.COLORS[block_id], draw_rect)
-                        else:
-                            try:
-                                text:pg.Surface = BLOCK_TEXTURE_CACHE[block_id]
-                                screen.blit(pg.transform.scale(text,(draw_rect.w, draw_rect.h)).convert_alpha(), draw_rect)
-                            except (TypeError, KeyError):
-                                pg.draw.rect(screen, self.COLORS[block_id], draw_rect) # Fallback if texture asset doesn't exist
+                        rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
+                        self.draw_rect(screen, rect, block_id)
 
         if debug:      
             for x in block:
@@ -254,6 +247,16 @@ class World:
                 if check % self.CHUNK_SIZE == 0:
                     rx1 = (start - camera.x) * (scale_w * scale_z)
                     pg.draw.line(screen, (255, 0, 0), (rx1, 0), (rx1, h), 1)
+
+    def draw_rect(self, screen: pg.Surface, rect: pg.Rect, id: int=0):
+        if self.Simple_color:
+            pg.draw.rect(screen, self.COLORS[id], rect)
+        else:
+            try:
+                text:pg.Surface = BLOCK_TEXTURE_CACHE[id]
+                screen.blit(pg.transform.scale(text,(rect.w, rect.h)).convert_alpha(), rect)
+            except (TypeError, KeyError):
+                pg.draw.rect(screen, self.COLORS[id], rect) # Fallback if texture asset doesn't exist
 
 if __name__ == "__main__":
     w = World()

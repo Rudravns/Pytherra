@@ -30,16 +30,20 @@ class Player:
 
         #Inventory
         self.inventory = self.setup_inventory()
-        self.hold = self.inventory[5][0]
-    
-    def setup_inventory(self):
-        inv = []
-        for x in range(6):
-            row = []
-            for y in range(9):
-                row.append(None)
-            inv.append(row)
-        return inv
+        self.inv_rects = []
+        self.hotbar = self.inventory[5]
+        self.hold = 0
+        self.show_inv = False
+
+        # Scrolling
+        self.scroll = 0
+
+        # Debug
+        self.debug = None
+
+
+
+    # Player
 
     def update(self, keys, world_rects: dict[int, list[pg.Rect]], dt: float):
         # Prevent physics explosions during lag spikes (e.g. window dragging)
@@ -199,9 +203,13 @@ class Player:
         return block_collided_with, self.collide
     
 
-    def draw(self, screen: pg.Surface, camera: pg.Vector2, hbox=False):
+
+    # Draw both Player and Inventory
+
+    def draw(self, screen: pg.Surface, world, camera: pg.Vector2, hbox=False):
+        # Player
         # Draw scales to exactly what utils.SCALE demands, leaving logic untouched
-        w, h, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["zoom"]
+        w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
         
         rx1 = (self.rect.x - camera.x) * (w * z)
         ry1 = (self.rect.y - camera.y) * (h * z)
@@ -213,3 +221,132 @@ class Player:
         pg.draw.rect(screen, (0, 128, 255), draw_rect)
         if hbox:
             pg.draw.rect(screen, "red", draw_rect, 2)
+        
+        # Inventory
+        self.inv_rects = [[], [], [], [], [], []]
+
+        #Hotbar
+        bar_size = 60 * o
+        gap = 6 * o
+        x = (screen.get_width() // 2 - bar_size // 2) - (bar_size + gap) * 4
+        y = screen.get_height() - bar_size * 2
+
+        # Background
+        size = 16 * o
+        rx1 = x - size
+        ry1 = y - size
+        rx2 = bar_size * 9 + gap * 8 + size * 2
+        ry2 = bar_size + size * 2
+        back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
+        # draw alpha
+        a_screen = pg.Surface((screen.get_width(), screen.get_height()), pg.SRCALPHA)
+        pg.draw.rect(a_screen, (0, 0, 0, 128), back_rect)
+        pg.draw.rect(a_screen, (0, 0, 0, 255), back_rect, math.floor(2 * o))
+
+        screen.blit(a_screen, (0, 0))
+
+        # Items
+        for i in range(9):
+            new_x = x + (bar_size + gap) * i
+            if i == self.hold:
+                color = (255, 255, 255)
+            else:
+                color = (0, 0, 0)
+            
+            draw_rect = pg.Rect(math.floor(new_x), math.floor(y), math.floor(bar_size), math.floor(bar_size))
+            if self.show_inv: self.inv_rects[5].append(draw_rect)
+
+            pg.draw.rect(screen, color, draw_rect, math.floor(2 * o))
+
+            if not self.inventory[5][i] == None:
+                rect = pg.Rect(0, 0, math.floor(bar_size // 2), math.floor(bar_size // 2))
+                rect.center = draw_rect.center
+                world.draw_rect(screen, rect, self.inventory[5][i][0])
+                utils.draw_text(screen, f"x{self.inventory[5][i][1]}", 20, (255, 255, 255), (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4)))
+
+
+
+        # Rest
+        if self.show_inv:
+            y -= (bar_size + gap) * 5 + 100
+            
+            # Draw Background
+            rx1 = x - size
+            ry1 = y - size
+            rx2 = bar_size * 9 + gap * 8 + size * 2
+            ry2 = bar_size * 5 + gap * 4 + size * 2
+            back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
+            pg.draw.rect(screen, (200, 200, 200), back_rect)
+
+            # Draw Items
+            for i in range(5):
+                new_y = y + (bar_size + gap) * i
+                for n in range(9):
+                    new_x = x + (bar_size + gap) * n
+
+                    draw_rect = pg.Rect(math.floor(new_x), math.floor(new_y), math.floor(bar_size), math.floor(bar_size))
+                    if self.show_inv: self.inv_rects[i].append(draw_rect)
+
+                    pg.draw.rect(screen, (160, 160, 160), draw_rect)
+                    pg.draw.rect(screen, (0, 0, 0), draw_rect, math.floor(2 * o))
+
+                    if not self.inventory[i][n] == None:
+                        rect = pg.Rect(0, 0, math.floor(bar_size // 2), math.floor(bar_size // 2))
+                        rect.center = draw_rect.center
+                        world.draw_rect(screen, rect, self.inventory[i][n][0])
+                        utils.draw_text(screen, f"x{self.inventory[i][n][1]}", 20, (255, 255, 255), (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4)))
+
+        #self.debug = self.inv_rects
+
+
+    # Inventory
+
+    def setup_inventory(self):
+        inv = []
+        for y in range(6):
+            row = []
+            for x in range(9):
+                row.append(None)
+            inv.append(row)
+        return inv
+    
+    def scroll_inv(self, scroll):
+        self.scroll += abs(scroll)
+        if self.scroll / 4 > 1:
+            self.scroll = 0
+            self.hold += int(scroll / abs(scroll))
+        
+        if self.hold > 8:
+            self.hold = 0
+        elif self.hold < 0:
+            self.hold = 8
+
+    def update_inv(self, block_data: dict, id: int = 0, hold: list = None, location: tuple[int, int] = None):
+        # Check if using mouse in inventory
+        if not location == None:
+            prev_item = self.inventory[location[0]][location[1]]
+            self.inventory[location[0]][location[1]] = hold
+            if not prev_item == None and not hold == None:
+                if prev_item[1] > 0 and hold[1] > 0:
+                    self.inventory[location[0]][location[1]][1] += prev_item[1]
+                    return
+            return prev_item
+
+        # Check inventory for same id
+        for y in range(5, -1, -1): # Hotbar --> top of inventory
+            for x in range(9): # Left to right
+                slot = self.inventory[y][x]
+                if not slot == None:
+                    if slot[0] == id and slot[1] < block_data[str(id)]["max"]:
+                        slot[1] += 1
+                        self.inventory[y][x] = slot
+                        return
+        
+        # If not found, find an available slot
+        for y in range(5, -1, -1): # Hotbar --> top of inventory
+            for x in range(9): # Left to right
+                slot = self.inventory[y][x]
+                if slot == None:
+                    slot = [id, 1]
+                    self.inventory[y][x] = slot
+                    return

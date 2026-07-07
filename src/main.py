@@ -18,7 +18,7 @@ class pytherra:
         self.dt = 0
 
         # Debugs
-        self.CONSOLE_DEBUG = True
+        self.CONSOLE_DEBUG = False
         self.UI_DEBUG = True
         self.GAME_DEBUG = True
 
@@ -48,14 +48,13 @@ class pytherra:
         while True:
             # Clear screen (Sky blue)
             self.screen.fill((135, 206, 235)) 
-
-            os.system('cls' if os.name == 'nt' else "clear")
             
             # Limit to 120 FPS, get delta time in seconds
             self.dt = self.clock.tick(120) / 1000.0 
 
             keys = pg.key.get_pressed()
-            self.update_game(keys)
+            buttons = pg.mouse.get_pressed()
+            self.update_game(keys, buttons)
             self.draw()
 
             if self.UI_DEBUG: 
@@ -67,6 +66,7 @@ class pytherra:
             else:
                 self.mouse.INSTANT = False
 
+            scroll = 0
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     return
@@ -79,7 +79,7 @@ class pytherra:
                         self.resize(1000, 800)
                     if event.key == pg.K_c:
                         self.world.Simple_color = not self.world.Simple_color
-                    if event.key == pg.K_e and self.GAME_DEBUG:
+                    if event.key == pg.K_n and self.GAME_DEBUG:
                         self.player.NO_CLIP = not self.player.NO_CLIP # pyright: ignore[reportAttributeAccessIssue]
                     
                     # Debug toggles
@@ -95,14 +95,48 @@ class pytherra:
                         utils.SCALE["zoom"] += 0.1
                     if event.key == pg.K_MINUS:
                         utils.SCALE["zoom"] -= 0.1
+                    
+                    # Inventory
+                    if event.key == pg.K_1:
+                        self.player.hold = 0
+                    if event.key == pg.K_2:
+                        self.player.hold = 1
+                    if event.key == pg.K_3:
+                        self.player.hold = 2
+                    if event.key == pg.K_4:
+                        self.player.hold = 3
+                    if event.key == pg.K_5:
+                        self.player.hold = 4
+                    if event.key == pg.K_6:
+                        self.player.hold = 5
+                    if event.key == pg.K_7:
+                        self.player.hold = 6
+                    if event.key == pg.K_8:
+                        self.player.hold = 7
+                    if event.key == pg.K_9:
+                        self.player.hold = 8
+
+                    if event.key == pg.K_e:
+                        self.player.show_inv = not self.player.show_inv
+                        self.mouse.hold_tick = 0
+                    
+                if event.type == pg.MOUSEWHEEL:
+                    if abs(event.x) > abs(event.y):
+                        scroll = -event.x
+                        if not self.player.show_inv: self.player.scroll_inv(-event.x)
+                    else:
+                        scroll = -event.y
+                        if not self.player.show_inv: self.player.scroll_inv(-event.y)
 
                 if event.type == pg.VIDEORESIZE:
                     if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
                     self.resize(event.w, event.h)
-
+            
+            self.mouse.inventory(self.player, self.camera, buttons, scroll)
+            
             pg.display.update()
 
-    def update_game(self, keys):
+    def update_game(self, keys, buttons):
         # Get active blocks ONLY around the player
         nearby_rects, _ = self.world.get_nearby_rects(self.player.rect)
         
@@ -111,7 +145,7 @@ class pytherra:
         else: self.player.update(keys, nearby_rects, self.dt)
 
         # Update mouse
-        self.mouse.update(self.player, self.world, self.camera, self.dt)
+        self.mouse.update(self.player, self.world, self.camera, buttons, self.dt)
         
         # LERP (smoothly animate) camera to follow player accounting for current zoom scale
         target_x = self.player.rect.centerx - (self.screen.get_width() / 2) / (utils.SCALE["width"] * utils.SCALE["zoom"])
@@ -124,8 +158,8 @@ class pytherra:
     def draw(self):
         # Draw everything relatively to the camera
         self.world.draw(self.screen, self.camera, self.GAME_DEBUG)
-        self.player.draw(self.screen, self.camera, self.GAME_DEBUG)
-        self.mouse.draw(self.screen, self.camera)
+        self.player.draw(self.screen, self.world, self.camera, self.GAME_DEBUG)
+        self.mouse.draw(self.screen, self.player, self.world, self.camera)
 
     def debug_UI(self):
         utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
@@ -143,12 +177,19 @@ class pytherra:
         utils.draw_text(self.screen, f"Mouse Pos: {self.mouse.pos}", 40, (255, 255, 255), (10, 370))
 
     def debug_console(self):
+        # \033[H moves the cursor to the top left.
+        # \033[J clears the screen from the cursor down.
+        sys.stdout.write("\033[H\033[J")
+
         chunk = self.world.get_chunk_from_pos(int(self.player.pos.x))
         surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))
+        
         print(chunk, surface)
         print(self.mouse.pos)
-        #print(self.world.debug)
-        print(self.mouse.debug)
+        print(self.mouse.hold)
+
+        # Flush stdout to ensure it prints immediately
+        sys.stdout.flush()
 
     def resize(self, w, h):
         """

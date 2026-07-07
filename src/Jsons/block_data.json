@@ -7,7 +7,8 @@
         "time": -1,
         "tool": null,
         "requirement": null,
-        "drop": null
+        "drop": -1,
+        "max": 1
     },
     "0": {
         "name": "Barrier",
@@ -17,27 +18,30 @@
         "time": -1,
         "tool": null,
         "requirement": null,
-        "drop": null
+        "drop": 0,
+        "max": 1
     },
     "1": {
         "name": "Grass",
         "collidable": true,
         "semicollidable": false,
         "breakable": true,
-        "time": 80,
+        "time": 60,
         "tool": "shovel",
         "requirement": null,
-        "drop": 2
+        "drop": 2,
+        "max": 64
     },
     "2": {
         "name": "Dirt",
         "collidable": true,
         "semicollidable": false,
         "breakable": true,
-        "time": 80,
+        "time": 60,
         "tool": "shovel",
         "requirement": null,
-        "drop": null
+        "drop": 2,
+        "max": 64
     },
     "3": {
         "name": "Stone",
@@ -47,7 +51,8 @@
         "time": 800,
         "tool": "pickaxe",
         "requirement": "wood",
-        "drop": 4
+        "drop": 4,
+        "max" : 64
     },
     "4": {
         "name": "Cobblestone",
@@ -57,17 +62,19 @@
         "time": 1000,
         "tool": "pickaxe",
         "requirement": "wood",
-        "drop": null
+        "drop": 4,
+        "max": 64
     },
     "5": {
         "name": "Snow",
         "collidable": true,
         "semicollidable": false,
         "breakable": true,
-        "time": 80,
+        "time": 60,
         "tool": "shovel",
         "requirement": null,
-        "drop": 1
+        "drop": 2,
+        "max": 16
     },
     "6": {
         "name": "Sand",
@@ -77,7 +84,8 @@
         "time": 60,
         "tool": "shovel",
         "requirement": null,
-        "drop": null
+        "drop": 6,
+        "max": 64
     },
     "7": {
         "name": "Water",
@@ -87,6 +95,7 @@
         "time": -1,
         "tool": null,
         "requirement": null,
-        "drop": null
+        "drop": 7,
+        "max": 1
     }
 }
