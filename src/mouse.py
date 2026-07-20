@@ -26,8 +26,12 @@ class Mouse():
 
         #debug
         self.debug = None
+        self.debug_rect = []
+        self.debug_line = ((0, 0))
 
     def update(self, player, world, camera: pg.Vector2, button: tuple[int, int, int], dt: float = 0):
+        w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
+        
         # Prevent hold_tick explosions during lag spikes (e.g. window dragging)
         if dt > 0.05: 
             dt = 0.05 
@@ -36,8 +40,8 @@ class Mouse():
         raw_x, raw_y = pg.mouse.get_pos()
         
         # Convert to logical world coordinates by un-scaling and adding camera position
-        mouse_x = (raw_x / (utils.SCALE["width"] * utils.SCALE["zoom"])) + camera.x
-        mouse_y = (raw_y / (utils.SCALE["height"] * utils.SCALE["zoom"])) + camera.y
+        mouse_x = (raw_x / (w * z)) + camera.x
+        mouse_y = (raw_y / (h * z)) + camera.y
         
         # Snap to world grid
         if not player.show_inv:
@@ -48,13 +52,10 @@ class Mouse():
         self.rect.x = int(mouse_x)
         self.rect.y = int(mouse_y)
 
-        # Reposition (revisit later to fix inconsistancy)
-        """
-        x = player.rect.x - player.rect.x % self.size
-        y = player.rect.y - player.rect.y % self.size
-        self.rect.x = self.reposition(self.rect.x, x, self.DISTANCE / (utils.SCALE["width"] * utils.SCALE["zoom"]))
-        self.rect.y = self.reposition(self.rect.y, y, self.DISTANCE / (utils.SCALE["height"] * utils.SCALE["zoom"]))
-        """
+        # Reposition Mouse
+        if not player.show_inv:
+            self.reposition_mouse(player, world, camera)
+                    
 
         # Update pos
         self.pos.x = self.rect.x
@@ -64,7 +65,9 @@ class Mouse():
         #print(rects)
 
         # Mouse Inputs
-        if not player.show_inv:
+        if player.show_inv: 
+            self.inventory(player, camera, click=button)
+        else:
             if button[0]: # Left click
                 self.left_click(player, world, dt)
             elif button[2]: # Right click
@@ -74,16 +77,109 @@ class Mouse():
             #self.debug = "Not Button"
             self.hold_tick = 0
             self.block = None
-        
-        if player.show_inv: self.inventory(player, camera, click=button)
 
-    def reposition(self, a, b, c):
-        if a-b > c:
-            return (b+c) + (b+c) % self.size
-        elif a-b < -c:
-            return (b-c) + (b-c) % self.size
+    def reposition_mouse(self, player, world, camera):
+        px = player.rect.centerx - player.rect.centerx % self.size
+        py = player.rect.centery - player.rect.centery % self.size
+        dist_x = math.sqrt((self.rect.centerx - px)**2)
+        dist_y = math.sqrt((self.rect.centery - py)**2)
+        #self.debug = (dist_x, dist_y)
+        if int(dist_x) > self.DISTANCE:
+            if self.rect.x > px:
+                self.rect.x = px + self.DISTANCE
+            else:
+                self.rect.x = px - self.DISTANCE
+        if int(dist_y) > self.DISTANCE:
+            if self.rect.y > py:
+                self.rect.y = py + self.DISTANCE
+            else:
+                self.rect.y = py - self.DISTANCE
+
+        # Check line of sight
+        done = False
+        for i in range(10): #Try to do task 10 times, if not break
+            done = self.line_of_sight(player, world, camera)
+            if done: break
+            
+        if done:
+            # Diagonal Check
+            check = 0
+            rect = self.rect
+            self.debug_rect = []
+        
+            if player.rect.x >= self.rect.x:
+                x = True # Left
+            else:
+                x = False # Right
+            
+            if player.rect.y >= self.rect.y:
+                y = True # Bottom
+            else:
+                y = False # Top
+
+            rects, _ = world.get_nearby_rects(self.rect)
+            for _, rect_list in rects.items():
+                for r in rect_list:
+                    if y:
+                        if r.y > self.rect.y and r.x == self.rect.x:
+                            check += 1
+                            rect = r
+                            self.debug_rect.append(r)
+                    else:
+                        if r.y < self.rect.y and r.x == self.rect.x:
+                            check += 1
+                            rect = r
+                            self.debug_rect.append(r)
+
+                    if x:
+                        if r.x > self.rect.x and r.y == self.rect.y:
+                            check += 1
+                            self.debug_rect.append(r)
+                    else:
+                        if r.x < self.rect.x and r.y == self.rect.y:
+                            check += 1
+                            self.debug_rect.append(r)
+            
+            if check == 2: self.rect = rect
+            self.debug = check
+
+    def line_of_sight(self, player, world, camera):
+        p_pos = (player.rect.centerx, player.rect.y)
+
+        if p_pos[0] >= self.rect.centerx:
+            if p_pos[0] >= self.rect.right:
+                x = self.rect.right + 1
+            else:
+                x = self.rect.centerx
         else:
-            return a
+            if p_pos[0] <= self.rect.left:
+                x = self.rect.left - 1
+            else:
+                x = self.rect.centerx
+        
+        if p_pos[1] >= self.rect.centery:
+            if p_pos[1] >= self.rect.bottom:
+                y = self.rect.bottom + 1
+            else:
+                y = self.rect.centery
+        else:
+            if p_pos[1] <= self.rect.top:
+                y = self.rect.top - 1
+            else:
+                y = self.rect.centery
+
+        m_pos = (x, y)
+        self.debug_line = m_pos
+        line = (p_pos, m_pos)
+
+        rects, _ = world.get_nearby_rects(self.rect, 2)
+        for _, rect_list in rects.items():
+            for r in rect_list:
+                if r.clipline(line) and not r == self.rect:
+                    self.rect = r
+                    return False
+        
+        return True
 
     def left_click(self, player, world, dt):
         rects, raw = world.get_nearby_rects(self.rect)
@@ -140,21 +236,22 @@ class Mouse():
             for _, rect_list in rects.items():
                 for w in rect_list:
                     # Checks if you are colliding with the player
-                    if self.rect.colliderect(player.rect):
-                        return
-                    
+                    if self.rect.colliderect(player.rect) or self.rect.center == w.center: return
+
                     x = abs(self.rect.x - w.x)
                     y = abs(self.rect.y - w.y)
                     dist = int(math.floor(math.sqrt((self.rect.x - w.x)**2 + (self.rect.y - w.y)**2)))
                     # Check if you are allowed to place a block
-                    if dist <= 45:
-                        cont = True
+                    if dist == 32: cont = True
 
             if cont:
                 chunk = world.get_chunk_from_pos(self.pos.x)
                 x = chunk[1] % self.size
-                # Temporarily places cobblestone until inventory is finished
-                world.chunks[chunk[0]][x][self.pos.y // self.size] = 4
+                if not player.inventory[5][player.hold] == None:
+                    world.chunks[chunk[0]][x][self.pos.y // self.size] = player.inventory[5][player.hold][0]
+                    player.inventory[5][player.hold][1] -= 1
+                    if player.inventory[5][player.hold][1] == 0:
+                        player.inventory[5][player.hold] = None
 
     def draw(self, screen: pg.Surface, player, world, camera: pg.Vector2):     
         w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
@@ -177,7 +274,7 @@ class Mouse():
                 utils.draw_text(screen, f"x{self.hold[1]}", 20, (255, 255, 255), (math.floor(draw_rect.x + 15), math.floor(draw_rect.y + 15)))
         else:
             pg.draw.rect(screen, (0, 0, 0), draw_rect, line_thickness)
-    
+
     def inventory(self, player, camera, click: tuple, scroll: int=0):
         w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
 

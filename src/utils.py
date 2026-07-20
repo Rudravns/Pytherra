@@ -22,9 +22,10 @@ def create_text(text, font_size, color):
     cache[key] = rendered_text
     return rendered_text
 
-def draw_text(screen: pygame.Surface, text: str, font_size: int, color: tuple, pos: tuple):
+def draw_text(screen: pygame.Surface, text: str, font_size: int, color: tuple, pos: tuple, scale_pos: bool=True):
     rendered_text = create_text(text, scale_font_size(font_size, SCALE), color)
-    screen.blit(rendered_text, (pos[0] * SCALE["width"], pos[1] * SCALE["height"]))
+    if scale_pos: screen.blit(rendered_text, (pos[0] * SCALE["width"], pos[1] * SCALE["height"]))
+    else: screen.blit(rendered_text, (pos[0], pos[1]))
 
 def check_in_cache(key): # DO NOT CALL THIS IN OTHER SCRIPTS, IT WILL ERROR
     # Check to see if the script is being called in utils.py

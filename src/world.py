@@ -172,7 +172,7 @@ class World:
         
         return True
 
-    def get_nearby_rects(self, player_rect: pg.Rect): #-> dict[int, list[pg.Rect]]:
+    def get_nearby_rects(self, player_rect: pg.Rect, radius: int=1): #-> dict[int, list[pg.Rect]]:
         """Fetches block rects only in the immediate vicinity of the player."""
         dict_rects = {}
         raw_data = {}
@@ -183,13 +183,15 @@ class World:
         start_by = int((player_rect.top - self.BLOCK_SIZE) // self.BLOCK_SIZE)
         end_by = int((player_rect.bottom + self.BLOCK_SIZE) // self.BLOCK_SIZE)
         
-        for bx in range(start_bx, end_bx + 1):
+        if radius < 0: radius = 0
+
+        for bx in range(start_bx - (radius - 1), end_bx + (radius - 1)):
             chunk_x = bx // self.CHUNK_SIZE
             local_x = bx % self.CHUNK_SIZE
             chunk = self.get_chunk(chunk_x)
             
             if local_x in chunk:
-                for by in range(start_by, end_by + 1):
+                for by in range(start_by - (radius - 1), end_by + (radius - 1)):
                     if by in chunk[local_x]:
                         if chunk[local_x][by] not in dict_rects:
                             dict_rects[chunk[local_x][by]] = []

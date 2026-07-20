@@ -45,6 +45,9 @@ class pytherra:
         l = loading.Loading(self)
         l.run()
 
+        self.camera.x = self.player.rect.centerx - (self.screen.get_width() / 2) / (utils.SCALE["width"] * utils.SCALE["zoom"])
+        self.camera.y = self.player.rect.centery - (self.screen.get_height() / 2) / (utils.SCALE["height"] * utils.SCALE["zoom"])
+
         while True:
             # Clear screen (Sky blue)
             self.screen.fill((135, 206, 235)) 
@@ -147,6 +150,9 @@ class pytherra:
         # Update mouse
         self.mouse.update(self.player, self.world, self.camera, buttons, self.dt)
         
+        self.update_camera()
+
+    def update_camera(self):
         # LERP (smoothly animate) camera to follow player accounting for current zoom scale
         target_x = self.player.rect.centerx - (self.screen.get_width() / 2) / (utils.SCALE["width"] * utils.SCALE["zoom"])
         target_y = self.player.rect.centery - (self.screen.get_height() / 2) / (utils.SCALE["height"] * utils.SCALE["zoom"])
@@ -160,6 +166,22 @@ class pytherra:
         self.world.draw(self.screen, self.camera, self.GAME_DEBUG)
         self.player.draw(self.screen, self.world, self.camera, self.GAME_DEBUG)
         self.mouse.draw(self.screen, self.player, self.world, self.camera)
+        if self.GAME_DEBUG:
+            w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
+            px = (self.player.rect.centerx - self.camera.x) * (w * z)
+            py = (self.player.rect.top - self.camera.y) * (h * z)
+            mx = (self.mouse.debug_line[0] - self.camera.x) * (w * z)
+            my = (self.mouse.debug_line[1] - self.camera.y) * (h * z)
+            pg.draw.line(self.screen, (255, 0, 0), (int(px), int(py)), (int(mx), int(my)))
+
+            for r in self.mouse.debug_rect:
+                rx = (r.x - self.camera.x) * (w * z)
+                ry = (r.y - self.camera.y) * (h * z)
+                rw = r.w * (w * z)
+                rh = r.h * (h * z)
+
+                draw_rect =pg.Rect(int(rx), int(ry), int(rw), int(rh))
+                pg.draw.rect(self.screen, (0, 0, 255), draw_rect, 1)
 
     def debug_UI(self):
         utils.draw_text(self.screen, f"FPS: {int(self.clock.get_fps())}", 40, (255, 255, 255), (10, 10))
@@ -174,7 +196,8 @@ class pytherra:
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
         utils.draw_text(self.screen, f"Current Chunk: {self.world.get_chunk_from_pos(int(self.player.pos.x))[0]}", 40, (255, 255, 255), (10, 310))
         utils.draw_text(self.screen, f"Hold Tick: {self.mouse.hold_tick}", 40, (255, 255, 255), (10, 340))
-        utils.draw_text(self.screen, f"Mouse Pos: {self.mouse.pos}", 40, (255, 255, 255), (10, 370))
+        utils.draw_text(self.screen, f"{self.mouse.debug}", 40, (255, 255, 255), (10, 370))
+
 
     def debug_console(self):
         # \033[H moves the cursor to the top left.
@@ -186,7 +209,7 @@ class pytherra:
         
         print(chunk, surface)
         print(self.mouse.pos)
-        print(self.mouse.hold)
+        print(self.player.hotbar)
 
         # Flush stdout to ensure it prints immediately
         sys.stdout.flush()

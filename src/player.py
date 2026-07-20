@@ -2,6 +2,7 @@
 import pygame as pg
 import math
 import utils
+import json
 import Dualsense
 
 class Player:
@@ -29,6 +30,7 @@ class Player:
         self.not_collidable = [0]         # Block IDs that the player completely ignores (Air)
 
         #Inventory
+        self.inv_data = json.load(open("src/Jsons/inventory.json", "r"))
         self.inventory = self.setup_inventory()
         self.inv_rects = []
         self.hotbar = self.inventory[5]
@@ -118,6 +120,7 @@ class Player:
                 self.jump = True 
 
         self.collide = ""
+        self.jump = True
 
         # 4. Move vertically and check collisions (separating X and Y axes prevents sticking)
         self.pos.y += self.vel.y * dt
@@ -221,83 +224,8 @@ class Player:
         pg.draw.rect(screen, (0, 128, 255), draw_rect)
         if hbox:
             pg.draw.rect(screen, "red", draw_rect, 2)
-        
-        # Inventory
-        self.inv_rects = [[], [], [], [], [], []]
 
-        #Hotbar
-        bar_size = 60 * o
-        gap = 6 * o
-        x = (screen.get_width() // 2 - bar_size // 2) - (bar_size + gap) * 4
-        y = screen.get_height() - bar_size * 2
-
-        # Background
-        size = 16 * o
-        rx1 = x - size
-        ry1 = y - size
-        rx2 = bar_size * 9 + gap * 8 + size * 2
-        ry2 = bar_size + size * 2
-        back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
-        # draw alpha
-        a_screen = pg.Surface((screen.get_width(), screen.get_height()), pg.SRCALPHA)
-        pg.draw.rect(a_screen, (0, 0, 0, 128), back_rect)
-        pg.draw.rect(a_screen, (0, 0, 0, 255), back_rect, math.floor(2 * o))
-
-        screen.blit(a_screen, (0, 0))
-
-        # Items
-        for i in range(9):
-            new_x = x + (bar_size + gap) * i
-            if i == self.hold:
-                color = (255, 255, 255)
-            else:
-                color = (0, 0, 0)
-            
-            draw_rect = pg.Rect(math.floor(new_x), math.floor(y), math.floor(bar_size), math.floor(bar_size))
-            if self.show_inv: self.inv_rects[5].append(draw_rect)
-
-            pg.draw.rect(screen, color, draw_rect, math.floor(2 * o))
-
-            if not self.inventory[5][i] == None:
-                rect = pg.Rect(0, 0, math.floor(bar_size // 2), math.floor(bar_size // 2))
-                rect.center = draw_rect.center
-                world.draw_rect(screen, rect, self.inventory[5][i][0])
-                utils.draw_text(screen, f"x{self.inventory[5][i][1]}", 20, (255, 255, 255), (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4)))
-
-
-
-        # Rest
-        if self.show_inv:
-            y -= (bar_size + gap) * 5 + 100
-            
-            # Draw Background
-            rx1 = x - size
-            ry1 = y - size
-            rx2 = bar_size * 9 + gap * 8 + size * 2
-            ry2 = bar_size * 5 + gap * 4 + size * 2
-            back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
-            pg.draw.rect(screen, (200, 200, 200), back_rect)
-
-            # Draw Items
-            for i in range(5):
-                new_y = y + (bar_size + gap) * i
-                for n in range(9):
-                    new_x = x + (bar_size + gap) * n
-
-                    draw_rect = pg.Rect(math.floor(new_x), math.floor(new_y), math.floor(bar_size), math.floor(bar_size))
-                    if self.show_inv: self.inv_rects[i].append(draw_rect)
-
-                    pg.draw.rect(screen, (160, 160, 160), draw_rect)
-                    pg.draw.rect(screen, (0, 0, 0), draw_rect, math.floor(2 * o))
-
-                    if not self.inventory[i][n] == None:
-                        rect = pg.Rect(0, 0, math.floor(bar_size // 2), math.floor(bar_size // 2))
-                        rect.center = draw_rect.center
-                        world.draw_rect(screen, rect, self.inventory[i][n][0])
-                        utils.draw_text(screen, f"x{self.inventory[i][n][1]}", 20, (255, 255, 255), (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4)))
-
-        #self.debug = self.inv_rects
-
+        self.draw_inventory(screen, world)     
 
     # Inventory
 
@@ -306,7 +234,7 @@ class Player:
         for y in range(6):
             row = []
             for x in range(9):
-                row.append(None)
+                row.append(self.inv_data[str(y)][x])
             inv.append(row)
         return inv
     
@@ -350,3 +278,83 @@ class Player:
                     slot = [id, 1]
                     self.inventory[y][x] = slot
                     return
+
+    def draw_inventory(self, screen, world):
+        self.inv_rects = [[], [], [], [], [], []]
+        o = utils.SCALE["overall"]
+
+        #Hotbar
+        bar_size = 60 * o
+        gap = 6 * o
+        x = (screen.get_width() // 2 - bar_size // 2) - (bar_size + gap) * 4
+        y = screen.get_height() - bar_size * 2
+
+        # Background
+        size = 16 * o
+        rx1 = x - size
+        ry1 = y - size
+        rx2 = bar_size * 9 + gap * 8 + size * 2
+        ry2 = bar_size + size * 2
+        back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
+        # draw alpha
+        a_screen = pg.Surface((screen.get_width(), screen.get_height()), pg.SRCALPHA)
+        pg.draw.rect(a_screen, (0, 0, 0, 128), back_rect)
+        pg.draw.rect(a_screen, (0, 0, 0, 255), back_rect, math.floor(2 * o))
+
+        screen.blit(a_screen, (0, 0))
+
+        # Items
+        for i in range(9):
+            new_x = x + (bar_size + gap) * i
+            if i == self.hold:
+                color = (255, 255, 255)
+            else:
+                color = (0, 0, 0)
+            
+            draw_rect = pg.Rect(math.floor(new_x), math.floor(y), math.floor(bar_size), math.floor(bar_size))
+            if self.show_inv: self.inv_rects[5].append(draw_rect)
+
+            pg.draw.rect(screen, color, draw_rect, math.floor(2 * o))
+
+            if not self.inventory[5][i] == None:
+                self.draw_item(screen, world, draw_rect, bar_size, 5, i)
+                #self.debug = (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4))
+
+
+
+        # Rest
+        if self.show_inv:
+            y -= (bar_size + gap) * 5 + 100
+            
+            # Draw Background
+            rx1 = x - size
+            ry1 = y - size
+            rx2 = bar_size * 9 + gap * 8 + size * 2
+            ry2 = bar_size * 5 + gap * 4 + size * 2
+            back_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
+            pg.draw.rect(screen, (200, 200, 200), back_rect)
+
+            # Draw Items
+            for i in range(5):
+                new_y = y + (bar_size + gap) * i
+                for n in range(9):
+                    new_x = x + (bar_size + gap) * n
+
+                    draw_rect = pg.Rect(math.floor(new_x), math.floor(new_y), math.floor(bar_size), math.floor(bar_size))
+                    if self.show_inv: self.inv_rects[i].append(draw_rect)
+
+                    pg.draw.rect(screen, (160, 160, 160), draw_rect)
+                    pg.draw.rect(screen, (0, 0, 0), draw_rect, math.floor(2 * o))
+
+                    if not self.inventory[i][n] == None:
+                        self.draw_item(screen, world, draw_rect, bar_size, i, n)       
+
+    def draw_item(self, screen, world, draw_rect, bar_size, i, n):
+        rect = pg.Rect(0, 0, math.floor(bar_size / 2), math.floor(bar_size / 2))
+        rect.center = draw_rect.center
+        world.draw_rect(screen, rect, self.inventory[i][n][0])
+        
+        size = 20
+        text_pos = (math.floor(rect.x + bar_size / 4), math.floor(rect.y + bar_size / 4))
+        if self.inventory[i][n][1] > 1: 
+            utils.draw_text(screen, f"x{self.inventory[i][n][1]}", size, (255, 255, 255), (text_pos[0], text_pos[1]), scale_pos = False)
