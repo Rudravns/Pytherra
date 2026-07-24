@@ -119,6 +119,7 @@ class Loading:
         try:
             # Check if block assets are ready to load
             texture.init_block_textures()
+            texture.init_tool_textures()
         except Exception:
             # Safe fallback if asset directory is missing locally
             print("Warning: Block texture assets not found. Using fallback colors.")

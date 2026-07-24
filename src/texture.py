@@ -14,19 +14,43 @@ BLOCK_TEXTURE_CACHE = {
     5: (240, 240, 240),  # Snow
     6: (244, 228, 179), # Sand
     7: (100, 150, 255), # Water
+    8: (160, 160, 160), # Gravel
+    9: (0, 160, 0), # Leaves
+    10: (90, 85, 58), # Wood
     "Sprite_sheet" : None #spritesheet cache
+}
+
+TOOL_TEXTURE_CACHE = {
+    0: [(50, 50, 50), (100, 100, 100), (150, 150, 150), (200, 200, 200)], # Pickaxe
+    1: [(50, 0, 0), (100, 0, 0), (150, 0, 0), (200, 0, 0)], # Sword
+    2: [(0, 50, 0), (0, 100, 0), (0, 150, 0), (0, 200, 0)], # Axe
+    3: [(0, 0, 50), (0, 0, 100), (0, 0, 150), (0, 0, 200)], # Shovel
+    "Sprite_sheet": None
 }
 
 def init_block_textures():
     global BLOCK_TEXTURE_CACHE
     sheet = SpriteSheet()
-    sheet.extract_grid(r"block_textures\Sheet.png" if os.name == "nt" else r"block_textures/Sheet.png", (32,32))
+    sheet.extract_grid(r"textures\Block_Sheet.png" if os.name == "nt" else r"textures/Block_Sheet.png", (32,32))
     BLOCK_TEXTURE_CACHE["Sprite_sheet"] = sheet
     __assign_blocks()
+
+def init_tool_textures():
+    global TOOL_TEXTURE_CACHE
+    sheet = SpriteSheet()
+    sheet.extract_grid(r"textures\\Tool_Sheet.png" if os.name == "nt" else r"textures/Tool_Sheet.png", (16,16))
+    TOOL_TEXTURE_CACHE["Sprite_sheet"] = sheet
+    __assign_tools()
 
 def resize_blocks(w, h):
     global BLOCK_TEXTURE_CACHE
     sheet:SpriteSheet = BLOCK_TEXTURE_CACHE["Sprite_sheet"]
+
+    sheet.rezize_images((w,h))
+
+def resize_tools(w, h):
+    global TOOL_TEXTURE_CACHE
+    sheet:SpriteSheet = TOOL_TEXTURE_CACHE["Sprite_sheet"]
 
     sheet.rezize_images((w,h))
 
@@ -42,6 +66,38 @@ def __assign_blocks():
     BLOCK_TEXTURE_CACHE[5] = sheet.get_image(4)
     BLOCK_TEXTURE_CACHE[6] = sheet.get_image(5)
     #BLOCK_TEXTURE_CACHE[7] = sheet.get_image(6)
+    BLOCK_TEXTURE_CACHE[8] = sheet.get_image(6)
+    BLOCK_TEXTURE_CACHE[9] = sheet.get_image(7)
+    BLOCK_TEXTURE_CACHE[10] = sheet.get_image(8)
+
+def __assign_tools():
+    global TOOL_TEXTURE_CACHE
+
+    sheet:SpriteSheet = TOOL_TEXTURE_CACHE["Sprite_sheet"]
+
+    # Pickaxe
+    TOOL_TEXTURE_CACHE[0][0] = sheet.get_image(0)
+    TOOL_TEXTURE_CACHE[0][1] = sheet.get_image(1)
+    TOOL_TEXTURE_CACHE[0][2] = sheet.get_image(2)
+    TOOL_TEXTURE_CACHE[0][3] = sheet.get_image(3)
+
+    # Sword
+    TOOL_TEXTURE_CACHE[1][0] = sheet.get_image(4)
+    TOOL_TEXTURE_CACHE[1][1] = sheet.get_image(5)
+    TOOL_TEXTURE_CACHE[1][2] = sheet.get_image(6)
+    TOOL_TEXTURE_CACHE[1][3] = sheet.get_image(7)
+
+    # Axe
+    TOOL_TEXTURE_CACHE[2][0] = sheet.get_image(8)
+    TOOL_TEXTURE_CACHE[2][1] = sheet.get_image(9)
+    TOOL_TEXTURE_CACHE[2][2] = sheet.get_image(10)
+    TOOL_TEXTURE_CACHE[2][3] = sheet.get_image(11)
+
+    # Shovel
+    TOOL_TEXTURE_CACHE[3][0] = sheet.get_image(12)
+    TOOL_TEXTURE_CACHE[3][1] = sheet.get_image(13)
+    TOOL_TEXTURE_CACHE[3][2] = sheet.get_image(14)
+    TOOL_TEXTURE_CACHE[3][3] = sheet.get_image(15)
 
 def load_image(path: str) -> pygame.Surface:
     """Load an image from disk with alpha support."""
@@ -195,6 +251,7 @@ def test():
 
     # Load textures
     init_block_textures()
+    init_tool_textures()
 
     # Grab the grass block image from your cache
     grass_img = BLOCK_TEXTURE_CACHE[2]

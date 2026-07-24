@@ -4,6 +4,7 @@ import math
 import utils
 import json
 import Dualsense
+from texture import TOOL_TEXTURE_CACHE, init_tool_textures, resize_tools
 
 class Player:
     def __init__(self, pos, size):
@@ -37,13 +38,23 @@ class Player:
         self.hold = 0
         self.show_inv = False
 
+        # RENDERING
+        self.COLORS = {
+            0: [(50, 50, 50), (100, 100, 100), (150, 150, 150), (200, 200, 200)], # Pickaxe
+            1: [(50, 0, 0), (100, 0, 0), (150, 0, 0), (200, 0, 0)], # Sword
+            2: [(0, 50, 0), (0, 100, 0), (0, 150, 0), (0, 200, 0)], # Axe
+            3: [(0, 0, 50), (0, 0, 100), (0, 0, 150), (0, 0, 200)], # Shovel
+            "Sprite_sheet": None
+        }
+
         # Scrolling
         self.scroll = 0
 
         # Debug
         self.debug = None
 
-
+        init_tool_textures()
+        resize_tools(16, 16)
 
     # Player
 
@@ -120,7 +131,7 @@ class Player:
                 self.jump = True 
 
         self.collide = ""
-        self.jump = True
+        #self.jump = True
 
         # 4. Move vertically and check collisions (separating X and Y axes prevents sticking)
         self.pos.y += self.vel.y * dt
@@ -166,6 +177,13 @@ class Player:
                         if self.vel.x > 0: # Moving right
                             # Step-up logic (allow step-up if grounded OR if swimming)
                             if self.rect.bottom - w.top <= self.MAX_STEP and (not self.jump or self.in_water):
+                                #Check if there is a rect above this
+                                for _, rects in world_rects.items():
+                                    for r in rects:
+                                        if r.y < w.y and r.x == w.x:
+                                            return
+
+                                # If not, continue to the step
                                 self.rect.bottom = w.top
                                 self.pos.y = self.rect.y
                                 self.collide = "step_right"
@@ -177,7 +195,7 @@ class Player:
                                 block_collided_with = block_id
                         elif self.vel.x < 0: # Moving left
                             # Step-up logic (allow step-up if grounded OR if swimming)
-                            if self.rect.bottom - w.top <= self.MAX_STEP and (not self.jump or self.in_water):
+                            if abs(self.rect.bottom - w.top) <= self.MAX_STEP and (not self.jump or self.in_water):
                                 self.rect.bottom = w.top
                                 self.pos.y = self.rect.y
                                 self.collide = "step_left"
@@ -225,6 +243,18 @@ class Player:
         if hbox:
             pg.draw.rect(screen, "red", draw_rect, 2)
 
+        """
+        if not self.debug == None:
+            for _, rect_list in self.debug:
+                for r in rect_list:
+                    rx1 = (r.x - camera.x) * (w * z)
+                    ry1 = (r.y - camera.y) * (h * z)
+                    rx2 = (r.w - camera.x) * (w * z)
+                    ry2 = (r.h - camera.y) * (h * z)      
+
+                    draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.ceil(rx2 - rx1), math.ceil(ry2 - ry1))
+                    pg.draw.rect(screen, (255, 0, 0), draw_rect, 1)
+        """
         self.draw_inventory(screen, world)     
 
     # Inventory
@@ -255,9 +285,17 @@ class Player:
             prev_item = self.inventory[location[0]][location[1]]
             self.inventory[location[0]][location[1]] = hold
             if not prev_item == None and not hold == None:
-                if prev_item[1] > 0 and hold[1] > 0:
-                    self.inventory[location[0]][location[1]][1] += prev_item[1]
-                    return
+                if prev_item[0] == hold[0]:
+                    if prev_item[0] < 100 or hold[0] < 100:
+                        if prev_item[1] > 0 and hold[1] > 0:
+                            self.inventory[location[0]][location[1]][1] += prev_item[1]
+                            if self.inventory[location[0]][location[1]][1] > 64:
+                                num = self.inventory[location[0]][location[1]][1] - 64
+                                self.inventory[location[0]][location[1]][1] = 64
+                                return [hold[0], num]
+                        return
+                    else:
+                        return prev_item
             return prev_item
 
         # Check inventory for same id
@@ -265,10 +303,16 @@ class Player:
             for x in range(9): # Left to right
                 slot = self.inventory[y][x]
                 if not slot == None:
-                    if slot[0] == id and slot[1] < block_data[str(id)]["max"]:
-                        slot[1] += 1
-                        self.inventory[y][x] = slot
-                        return
+                    if id < 100:
+                        if slot[0] == id and slot[1] < block_data[str(id)]["max"]:
+                            slot[1] += 1
+                            self.inventory[y][x] = slot
+                            return
+                    else:
+                        if slot[0] == id and slot[1] < 1:
+                            slot[1] += 1
+                            self.inventory[y][x] = slot
+                            return
         
         # If not found, find an available slot
         for y in range(5, -1, -1): # Hotbar --> top of inventory
@@ -318,7 +362,6 @@ class Player:
 
             if not self.inventory[5][i] == None:
                 self.draw_item(screen, world, draw_rect, bar_size, 5, i)
-                #self.debug = (math.floor(rect.x + bar_size // 4), math.floor(rect.y + bar_size // 4))
 
 
 
@@ -352,9 +395,23 @@ class Player:
     def draw_item(self, screen, world, draw_rect, bar_size, i, n):
         rect = pg.Rect(0, 0, math.floor(bar_size / 2), math.floor(bar_size / 2))
         rect.center = draw_rect.center
-        world.draw_rect(screen, rect, self.inventory[i][n][0])
+        if self.inventory[i][n][0] < 100:
+            world.draw_rect(screen, rect, self.inventory[i][n][0])
+        else:
+            self.draw_rect(screen, rect, self.inventory[i][n][0])
         
         size = 20
         text_pos = (math.floor(rect.x + bar_size / 4), math.floor(rect.y + bar_size / 4))
         if self.inventory[i][n][1] > 1: 
             utils.draw_text(screen, f"x{self.inventory[i][n][1]}", size, (255, 255, 255), (text_pos[0], text_pos[1]), scale_pos = False)
+
+    def draw_rect(self, screen, rect, id):
+        new_id = str(id)
+        tool = int(new_id[1])
+        material = int(new_id[2])
+
+        try:
+            text:pg.Surface = TOOL_TEXTURE_CACHE[tool][material]
+            screen.blit(pg.transform.scale(text,(rect.w, rect.h)).convert_alpha(), rect)
+        except (TypeError, KeyError):
+            pg.draw.rect(screen, self.COLORS[tool][material], rect) # Fallback if texture asset doesn't exist

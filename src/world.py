@@ -44,6 +44,9 @@ class World:
             5: (240, 240, 240),  # Snow
             6: (244, 228, 179), # Sand
             7: (100, 150, 255), # Water
+            8: (160, 160, 160), # Gravel
+            9: (0, 160, 0), # Leaves
+            10: (90, 85, 58), # Wood
         }
         init_block_textures()
         resize_blocks(self.BLOCK_SIZE, self.BLOCK_SIZE)

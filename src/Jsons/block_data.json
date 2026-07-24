@@ -48,7 +48,7 @@
         "collidable": true,
         "semicollidable": false,
         "breakable": true,
-        "time": 800,
+        "time": 600,
         "tool": "pickaxe",
         "requirement": "wood",
         "drop": 4,
@@ -59,7 +59,7 @@
         "collidable": true,
         "semicollidable": false,
         "breakable": true,
-        "time": 1000,
+        "time": 700,
         "tool": "pickaxe",
         "requirement": "wood",
         "drop": 4,
@@ -97,5 +97,38 @@
         "requirement": null,
         "drop": 7,
         "max": 1
+    },
+    "8": {
+        "name": "Gravel",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 8,
+        "max": 64
+    },
+    "9": {
+        "name": "Leaves",
+        "collidable": false,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 20,
+        "tool": "shear",
+        "requirement": "iron",
+        "drop": 9,
+        "max": 64
+    },
+    "10": {
+        "name": "Wood",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 180,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 10,
+        "max": 64
     }
 }

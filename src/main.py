@@ -4,7 +4,6 @@ import os, sys
 import random, time, threading
 import player, mouse, world, loading, utils
 
-
 class pytherra:
     def __init__(self, seed:int = None): # pyright: ignore[reportArgumentType]
         pg.init()
@@ -38,6 +37,9 @@ class pytherra:
 
         # Initialize camera
         self.camera = pg.Vector2(0, 0)
+
+        #Setup textures
+        #init_textures()
 
     def run(self):
         # Instantiate and run the loading screen by passing 'self' (the main game application)
@@ -141,7 +143,7 @@ class pytherra:
 
     def update_game(self, keys, buttons):
         # Get active blocks ONLY around the player
-        nearby_rects, _ = self.world.get_nearby_rects(self.player.rect)
+        nearby_rects, _ = self.world.get_nearby_rects(self.player.rect, 2)
         
         # Update physical world state
         if self.player.NO_CLIP: self.player.no_clip(keys)
@@ -208,8 +210,9 @@ class pytherra:
         surface = self.world.get_surface_y(int(self.player.pos.x // self.world.BLOCK_SIZE))
         
         print(chunk, surface)
-        print(self.mouse.pos)
-        print(self.player.hotbar)
+        if not self.mouse.debug == None: 
+            print(self.mouse.debug)
+        print(self.player.debug)
 
         # Flush stdout to ensure it prints immediately
         sys.stdout.flush()
