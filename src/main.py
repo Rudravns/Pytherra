@@ -103,35 +103,35 @@ class pytherra:
                     
                     # Inventory
                     if event.key == pg.K_1:
-                        self.player.hold = 0
+                        self.player.inv.hold = 0
                     if event.key == pg.K_2:
-                        self.player.hold = 1
+                        self.player.inv.hold = 1
                     if event.key == pg.K_3:
-                        self.player.hold = 2
+                        self.player.inv.hold = 2
                     if event.key == pg.K_4:
-                        self.player.hold = 3
+                        self.player.inv.hold = 3
                     if event.key == pg.K_5:
-                        self.player.hold = 4
+                        self.player.inv.hold = 4
                     if event.key == pg.K_6:
-                        self.player.hold = 5
+                        self.player.inv.hold = 5
                     if event.key == pg.K_7:
-                        self.player.hold = 6
+                        self.player.inv.hold = 6
                     if event.key == pg.K_8:
-                        self.player.hold = 7
+                        self.player.inv.hold = 7
                     if event.key == pg.K_9:
-                        self.player.hold = 8
+                        self.player.inv.hold = 8
 
                     if event.key == pg.K_e:
-                        self.player.show_inv = not self.player.show_inv
+                        self.player.inv.show_inv = not self.player.inv.show_inv
                         self.mouse.hold_tick = 0
                     
                 if event.type == pg.MOUSEWHEEL:
                     if abs(event.x) > abs(event.y):
                         scroll = -event.x
-                        if not self.player.show_inv: self.player.scroll_inv(-event.x)
+                        if not self.player.inv.show_inv: self.player.inv.scroll_inv(-event.x)
                     else:
                         scroll = -event.y
-                        if not self.player.show_inv: self.player.scroll_inv(-event.y)
+                        if not self.player.inv.show_inv: self.player.inv.scroll_inv(-event.y)
 
                 if event.type == pg.VIDEORESIZE:
                     if self.CONSOLE_DEBUG: print(f"Resized to {event.w, event.h}")
