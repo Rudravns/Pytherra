@@ -103,7 +103,8 @@ def load_image(path: str) -> pygame.Surface:
     """Load an image from disk with alpha support."""
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        BASE_DIR = os.path.abspath(os.path.join(script_dir, "..", 'assets', 'images'))
+        folder_dir = os.path.dirname(os.path.abspath(script_dir))
+        BASE_DIR = os.path.abspath(os.path.join(folder_dir, "..", 'assets', 'images'))
         image = pygame.image.load(os.path.join(BASE_DIR, path))
 
         return image

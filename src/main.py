@@ -2,7 +2,13 @@
 import pygame as pg
 import os, sys
 import random, time, threading
-import player, mouse, world, loading, utils
+
+# Player folder
+from Player import player
+# Controls folder
+from Controls import mouse
+# Game folder
+from Game import world, loading, utils
 
 class pytherra:
     def __init__(self, seed:int = None): # pyright: ignore[reportArgumentType]

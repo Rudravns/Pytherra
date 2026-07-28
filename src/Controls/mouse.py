@@ -1,8 +1,10 @@
 import pygame as pg
 import os, sys
 import math
-import utils
 import json
+
+# Game Folder
+from Game import utils
 
 class Mouse():
     def __init__(self, size: int = 32):
@@ -290,9 +292,9 @@ class Mouse():
                 x = chunk[1] % self.size
                 if not player.inv.inventory[5][player.inv.hold] == None:
                     world.chunks[chunk[0]][x][self.pos.y // self.size] = player.inv.inventory[5][player.inv.hold][0]
-                    player.inv.inventory[5][player.hold][1] -= 1
-                    if player.inv.inventory[5][player.hold][1] == 0:
-                        player.inv.inventory[5][player.hold] = None
+                    player.inv.inventory[5][player.inv.hold][1] -= 1
+                    if player.inv.inventory[5][player.inv.hold][1] == 0:
+                        player.inv.inventory[5][player.inv.hold] = None
 
     def draw(self, screen: pg.Surface, player, world, camera: pg.Vector2):     
         w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]

@@ -1,10 +1,14 @@
 # pyright: reportArgumentType = false
 import pygame as pg
 import math
-import utils
-import inventory
 import json
-import Dualsense
+
+# Player Folder (home folder)
+from Player import inventory
+# Control Folder
+from Controls import Dualsense
+# Game Folder
+from Game import utils
 
 class Player:
     def __init__(self, pos, size):

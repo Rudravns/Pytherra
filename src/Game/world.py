@@ -1,8 +1,10 @@
 import pygame as pg
 from perlin_noise import PerlinNoise
 import math
-import utils
-from texture import BLOCK_TEXTURE_CACHE, init_block_textures, resize_blocks
+
+# Game Folder (home folder)
+from Game import utils
+from Game.texture import BLOCK_TEXTURE_CACHE, init_block_textures, resize_blocks
 
     
 

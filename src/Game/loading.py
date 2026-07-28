@@ -1,9 +1,9 @@
 import pygame as pg
 import threading
-import time
-import utils
-import texture
-import math
+import time, math
+
+# Game Folder (home folder)
+from Game import utils, texture
 
 class Loading:
     def __init__(self, main_app):

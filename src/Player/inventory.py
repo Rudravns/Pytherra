@@ -1,8 +1,10 @@
 import pygame as pg
 import json
-import utils
 import math
-from texture import TOOL_TEXTURE_CACHE, init_tool_textures, resize_tools
+
+# Game Folder
+from Game import utils
+from Game.texture import TOOL_TEXTURE_CACHE, init_tool_textures, resize_tools
 
 class Inventory():
     def __init__(self):
