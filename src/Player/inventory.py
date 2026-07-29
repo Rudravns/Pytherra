@@ -60,9 +60,9 @@ class Inventory():
                     if prev_item[0] < 100 or hold[0] < 100:
                         if prev_item[1] > 0 and hold[1] > 0:
                             self.inventory[location[0]][location[1]][1] += prev_item[1]
-                            if self.inventory[location[0]][location[1]][1] > 64:
-                                num = self.inventory[location[0]][location[1]][1] - 64
-                                self.inventory[location[0]][location[1]][1] = 64
+                            if self.inventory[location[0]][location[1]][1] > block_data[str(id)]["max"]:
+                                num = self.inventory[location[0]][location[1]][1] - block_data[str(id)]["max"]
+                                self.inventory[location[0]][location[1]][1] = block_data[str(id)]["max"]
                                 return [hold[0], num]
                         return
                     else:

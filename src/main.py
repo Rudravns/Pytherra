@@ -153,7 +153,7 @@ class pytherra:
         
         # Update physical world state
         if self.player.NO_CLIP: self.player.no_clip(keys)
-        else: self.player.update(keys, nearby_rects, self.dt)
+        else: self.player.update(keys, self.mouse.block_data, nearby_rects, self.dt)
 
         # Update mouse
         self.mouse.update(self.player, self.world, self.camera, buttons, self.dt)
@@ -204,7 +204,12 @@ class pytherra:
         utils.draw_text(self.screen, f"World Size: {self.WORLD_SIZE}", 40, (255, 255, 255), (10, 280))
         utils.draw_text(self.screen, f"Current Chunk: {self.world.get_chunk_from_pos(int(self.player.pos.x))[0]}", 40, (255, 255, 255), (10, 310))
         utils.draw_text(self.screen, f"Hold Tick: {self.mouse.hold_tick}", 40, (255, 255, 255), (10, 340))
-        utils.draw_text(self.screen, f"{self.mouse.debug}", 40, (255, 255, 255), (10, 370))
+        if self.player.fall_tick >= 10:
+            color = (255, 0 ,0)
+        else:
+            color = (0, 255, 0)
+        utils.draw_text(self.screen, f"{self.player.fall_tick}", 40, color, (10, 370))
+
 
 
     def debug_console(self):

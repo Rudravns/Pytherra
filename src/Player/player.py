@@ -29,6 +29,7 @@ class Player:
         self.jump = True
         self.collide = ""
         self.in_water = False # Track if player is currently submerged
+        self.fall_tick = 0 # Grace period when walking off a block
 
         self.collidable = [1, 2, 3, 4, 5, 6] # Block IDs that the player can collide with (Grass, Dirt, Stone, Snow, Sand)
         self.semi_collidable = [7]        # Block IDs that the player can pass through with fluid physics (Water)
@@ -42,7 +43,20 @@ class Player:
 
     # Player
 
-    def update(self, keys, world_rects: dict[int, list[pg.Rect]], dt: float):
+    def update(self, keys, block_data: dict, world_rects: dict[int, list[pg.Rect]], dt: float):
+        # Update collision lists
+        self.collidable = []
+        self.semi_collidable = []
+        self.not_collidable = []
+        for id in block_data:
+            if block_data[id]['semicollidable']:
+                self.semi_collidable.append(int(id))
+            else:
+                if block_data[id]['collidable']:
+                    self.collidable.append(int(id))
+                else:
+                    self.not_collidable.append(int(id))
+
         # Prevent physics explosions during lag spikes (e.g. window dragging)
         if dt > 0.05: 
             dt = 0.05 
@@ -150,6 +164,12 @@ class Player:
     def check_collision(self, world_rects: dict[int, list[pg.Rect]], axis: str):
         block_collided_with = False
 
+        if axis == 'y':
+            self.fall_tick += 1
+
+        if self.fall_tick >= 10:
+            self.jump = True
+
         for block_id, rect_list in world_rects.items():
             # Only collide solidly with actual solid block types
             if block_id not in self.collidable:
@@ -195,12 +215,14 @@ class Player:
                         if self.vel.y > 0: # Falling
                             self.rect.bottom = w.top
                             self.vel.y = 0
+                            self.fall_tick = 0
                             self.jump = False
                             self.collide = "bottom"
                             block_collided_with = block_id
                         elif self.vel.y < 0: # Hitting head
                             self.rect.top = w.bottom
                             self.vel.y = 0
+                            self.fall_tick = 0
                             self.collide = "top"
                             block_collided_with = block_id
                         self.pos.y = self.rect.y

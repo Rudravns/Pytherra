@@ -195,6 +195,7 @@ class Mouse():
                                 self.hold_tick += multiplier + dt
 
                             if self.hold_tick >= self.block_data[str(block_id)]["time"]:
+                                self.debug = (self.block_data[str(block_id)], block_id)
                                 self.remove_block(raw, player, world, block_id)
                                 self.hold_tick = 0
                         else:
@@ -226,7 +227,6 @@ class Mouse():
 
             if tool == requirement:
                 mult *= material
-                self.debug = mult
                 if material == 0:
                     material = "wood"
                 elif material == 1:
@@ -261,7 +261,7 @@ class Mouse():
                     if level[y] == id or (level[y] == 6 and id == 1):
                         if pos.y == y:
                             if not self.block_data[str(id)]["tool"] == None and not self.block_data[str(id)]["requirement"] == None:
-                                tool = self.determine_multiplier(self.block_data[str(id)]["tool"], player.inv.hotbar[player.hold], give_type=True)
+                                tool = self.determine_multiplier(self.block_data[str(id)]["tool"], player.inv.hotbar[player.inv.hold], give_type=True)
                                 if tool[0] == self.block_data[str(id)]["tool"] and tool[1] == self.block_data[str(id)]["requirement"]: #pyright: ignore
                                     player.inv.update_inv(self.block_data, id=self.block_data[str(id)]["drop"])
                             else:
