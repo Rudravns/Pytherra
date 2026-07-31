@@ -323,6 +323,9 @@ class Mouse():
         else:
             pg.draw.rect(screen, (0, 0, 0), draw_rect, line_thickness)
 
+
+
+    # Inventory Related Stuff
     def inventory(self, player, camera, click: tuple, scroll: int=0, dt: float=0.0):
         w, h, o, z = utils.SCALE["width"], utils.SCALE["height"], utils.SCALE["overall"], utils.SCALE["zoom"]
 
@@ -331,42 +334,52 @@ class Mouse():
             ry = (self.rect.y - camera.y) * (h * z)
             curser_rect = pg.Rect(math.floor(rx), math.floor(ry), 1, 1)
 
+            # Inventory
             for row in player.inv.inv_rects:
                 for rect in row:
                     if curser_rect.colliderect(rect):
-                        a = player.inv.inv_rects.index(row)
-                        b = player.inv.inv_rects[a].index(rect)
-                        if click[0] and self.hold_tick == 0: # Left Click
-                            self.hold = player.inv.update_inv(self.block_data, hold=self.hold, location=[a, b])
-                        elif click[2]: # Right Click
-                            if self.hold == None:
-                                self.hold = player.inv.update_inv(self.block_data, hold=self.hold, location=[a, b])
-                                if not self.hold == None:
-                                    self.deposit = [self.hold[0], math.ceil(self.hold[1] / 2)]
-                                    self.hold[1] -= self.deposit[1]
-                                    if self.hold[1] == 0:
-                                        self.hold = None
-                                    
-                                    player.inv.update_inv(self.block_data, hold=self.deposit, location=[a, b])
-                            else:
-                                if math.floor(self.hold_tick) % 60 == 0:
-                                    if player.inv.inventory[a][b] == None:
-                                        self.deposit = [self.hold[0], 1]
-                                        self.hold[1] -= self.deposit[1]
-                                        if self.hold[1] < 1:
-                                            self.hold = None
+                        self.inv_collide(player, click, row, rect, "Inv")
 
-                                        player.inv.update_inv(self.block_data, hold=self.deposit, location=[a, b])
-
-                                    elif self.hold[0] == player.inv.inventory[a][b][0]:
-                                        self.deposit = [self.hold[0], 1]
-                                        self.hold[1] -= self.deposit[1]
-                                        if self.hold[1] < 1:
-                                            self.hold = None
-                                    
-                                        player.inv.update_inv(self.block_data, hold=self.deposit, location=[a, b])
+            # Crafting
+            for row in player.inv.craft_rects:
+                for rect in row:
+                    if curser_rect.colliderect(rect):
+                        self.inv_collide(player, click, row, rect, "Craft")
 
             if click[0] or click[2]:
                 self.hold_tick += 1 + dt
             else:
                 self.hold_tick = 0
+
+    def inv_collide(self, player, click, row, rect, type: str):
+        if type == "Inv":
+            a = player.inv.inv_rects.index(row)
+            b = player.inv.inv_rects[a].index(rect)
+            loc = player.inv.inventory
+        else:
+            a = player.inv.craft_rects.index(row)
+            b = player.inv.craft_rects[a].index(rect)
+            loc = player.inv.craft
+
+        if click[0] and self.hold_tick == 0: # Left Click
+            self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
+        elif click[2]: # Right Click
+            if self.hold == None:
+                self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
+                if not self.hold == None and self.hold_tick == None:
+                    self.deposit = [self.hold[0], math.ceil(self.hold[1] / 2)]
+                    self.hold[1] -= self.deposit[1]
+                    if self.hold[1] == 0:
+                        self.hold = None
+                                    
+                    self.hold = player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
+            else:
+                if math.floor(self.hold_tick) % 60 == 0:
+                    if loc[a][b] == None or self.hold[0] == loc[a][b][0]:
+                        self.deposit = [self.hold[0], 1]
+                        self.debug = (self.hold, self.deposit)
+                        self.hold[1] -= self.deposit[1]
+                        if self.hold[1] < 1:
+                            self.hold = None
+
+                        self.hold = player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])

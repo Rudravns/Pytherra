@@ -209,6 +209,8 @@ class pytherra:
         else:
             color = (0, 255, 0)
         utils.draw_text(self.screen, f"{self.player.fall_tick}", 40, color, (10, 370))
+        utils.draw_text(self.screen, f"{self.mouse.hold}", 40, (255, 255, 255), (10, 400))
+
 
 
 
