@@ -22,7 +22,7 @@ class Mouse():
         self.INSTANT = False
 
         # Blocks
-        self.block_data = json.load(open("src/Jsons/block_data.json", "r"))
+        self.block_data = json.load(open("Jsons/block_data.json", "r"))
         self.hold = None
         self.deposit = None
 

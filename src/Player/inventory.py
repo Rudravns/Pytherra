@@ -9,7 +9,7 @@ from Game.texture import TOOL_TEXTURE_CACHE, init_tool_textures, resize_tools
 class Inventory():
     def __init__(self):
         # Inventory stuff
-        self.inv_data = json.load(open("src/Jsons/inventory.json", "r"))
+        self.inv_data = json.load(open("Jsons/inventory.json", "r"))
         self.inventory = self.setup_inventory()
         self.inv_rects = [[], [], [], [], [], []]
         self.hotbar = self.inventory[5]
