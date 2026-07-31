@@ -1,0 +1,27 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "vnc"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pkill -f 'Xvnc :1' 2>/dev/null || true; pkill -f 'rfbproxy --address 0.0.0.0:5900' 2>/dev/null || true; Xvnc :1 -rfbport=5901 -SecurityTypes=None -BlacklistTimeout=0 -BlacklistThreshold=1000000000 -geometry 800x600 -localhost >/tmp/pytherra-xvnc.log 2>&1 & rfbproxy --address 0.0.0.0:5900 --rfb-server 127.0.0.1:5901 >/tmp/pytherra-rfbproxy.log 2>&1 & cd src && exec env DISPLAY=:1 python main.py"
