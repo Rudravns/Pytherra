@@ -263,9 +263,9 @@ class Mouse():
                             if not self.block_data[str(id)]["tool"] == None and not self.block_data[str(id)]["requirement"] == None:
                                 tool = self.determine_multiplier(self.block_data[str(id)]["tool"], player.inv.hotbar[player.inv.hold], give_type=True)
                                 if tool[0] == self.block_data[str(id)]["tool"] and tool[1] == self.block_data[str(id)]["requirement"]: #pyright: ignore
-                                    player.inv.update_inv(self.block_data, id=self.block_data[str(id)]["drop"])
+                                    player.inv.update_inv(self.block_data, loc = player.inv.inventory, id=self.block_data[str(id)]["drop"])
                             else:
-                                player.inv.update_inv(self.block_data, id=self.block_data[str(id)]["drop"])
+                                player.inv.update_inv(self.block_data, loc = player.inv.inventory, id=self.block_data[str(id)]["drop"])
                             
                             # Remember to modify this when silk touch support comes
                             del world.chunks[chunk][x % self.size][y]
