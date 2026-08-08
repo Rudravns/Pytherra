@@ -49,6 +49,9 @@ class World:
             8: (160, 160, 160), # Gravel
             9: (0, 160, 0), # Leaves
             10: (90, 85, 58), # Wood
+            11: (140, 130, 120), # Wood Planks
+            12: (140, 120, 110), # Crafting Table
+            13: (168, 168, 168)  # Smooth Stone
         }
         init_block_textures()
         resize_blocks(self.BLOCK_SIZE, self.BLOCK_SIZE)

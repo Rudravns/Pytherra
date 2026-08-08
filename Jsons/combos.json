@@ -1,0 +1,92 @@
+{
+    "11": {
+        "name": "Wood Planks",
+        "combos": [
+            [10]
+        ],
+        "grid": "1x1",
+        "give": 4
+    },
+    "12": {
+        "name": "Crafting Table",
+        "combo": [
+            [[11, 11], [11, 11]]
+        ],
+        "grid": "2x2",
+        "give": 1
+    },
+    "100": {
+        "name": "Wooden Pickaxe",
+        "combo": [
+            [[11, 11, 11], [null, 140, null], [null, 140, null]]
+        ],
+        "grid": "3x3",
+        "give": 1
+    },
+    "101": {
+        "name": "Stone Pickaxe",
+        "combo": [
+            [[4, 4, 4], [null, 140, null], [null, 140, null]]
+        ],
+        "grid": "3x3",
+        "give": 1
+    },
+    "110": {
+        "name": "Wooden Sword",
+        "combo": [
+            [[11], [11], [140]]
+        ],
+        "grid": "1x3",
+        "give": 1
+    },
+    "111": {
+        "name": "Stone Sword",
+        "combo": [
+            [[4], [4], [140]]
+        ],
+        "grid": "1x3",
+        "give": 1
+    },
+    "120": {
+        "name": "Wooden Axe",
+        "combo": [
+            [[11, 11], [140, 11], [140, null]],
+            [[11, 11], [11, 140], [null, 140]]
+        ],
+        "grid": "3x3",
+        "give": 1
+    },
+    "121": {
+        "name": "Stone Axe",
+        "combo": [
+            [[4, 4], [140, 4], [140, null]],
+            [[4, 4], [4, 140], [null, 140]]
+        ],
+        "grid": "3x3",
+        "give": 1
+    },
+    "130": {
+        "name": "Wooden Shovel",
+        "combo": [
+            [[11], [140], [140]]
+        ],
+        "grid": "1x3",
+        "give": 1
+    },
+    "131": {
+        "name": "Stone Shovel",
+        "combo": [
+            [[4], [140], [140]]
+        ],
+        "grid": "1x3",
+        "give": 1
+    },
+    "140": {
+        "name": "Stick",
+        "combo": [
+            [[11], [11]]
+        ],
+        "grid": "1x2",
+        "give": 4
+    }
+}

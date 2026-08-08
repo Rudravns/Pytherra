@@ -130,5 +130,38 @@
         "requirement": null,
         "drop": 10,
         "max": 64
+    },
+    "11": {
+        "name": "Wood Planks",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 200,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 11,
+        "max": 64        
+    },
+    "12": {
+        "name": "Crafting Table",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 200,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 12,
+        "max": 64        
+    },
+    "13": {
+        "name": "Smooth Stone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 600,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": 13,
+        "max": 64
     }
 }

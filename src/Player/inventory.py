@@ -18,6 +18,8 @@ class Inventory():
         #Crafting
         self.craft = [[None, None, None], [None, None, None], [None, None, None]]
         self.craft_rects = [[], [], []]
+        self.result = None
+        self.craft_combos = json.load(open("src/Jsons/combos.json", "r"))
 
         self.show_inv = False
 
@@ -29,7 +31,7 @@ class Inventory():
             1: [(50, 0, 0), (100, 0, 0), (150, 0, 0), (200, 0, 0)], # Sword
             2: [(0, 50, 0), (0, 100, 0), (0, 150, 0), (0, 200, 0)], # Axe
             3: [(0, 0, 50), (0, 0, 100), (0, 0, 150), (0, 0, 200)], # Shovel
-            4: (100, 120, 80), # Stick
+            4: [(100, 120, 80)], # Stick
             "Sprite_sheet": None
         }
 
@@ -63,16 +65,15 @@ class Inventory():
             loc[location[0]][location[1]] = hold
             if not prev_item == None and not hold == None:
                 if prev_item[0] == hold[0]:
-                    if prev_item[0] < 100 or hold[0] < 100:
-                        if prev_item[1] > 0 and hold[1] > 0:
-                            loc[location[0]][location[1]][1] += prev_item[1]
-                            if loc[location[0]][location[1]][1] > block_data[str(id)]["max"]:
-                                num = loc[location[0]][location[1]][1] - block_data[str(id)]["max"]
-                                loc[location[0]][location[1]][1] = block_data[str(id)]["max"]
-                                return [hold[0], num]
+                    if prev_item[0] < 100 or hold[0] < 100: #Check if it's a block
+                        loc[location[0]][location[1]][1] += prev_item[1]
+                        if loc[location[0]][location[1]][1] > block_data[str(id)]["max"]:
+                            num = loc[location[0]][location[1]][1] - block_data[str(id)]["max"]
+                            loc[location[0]][location[1]][1] = block_data[str(id)]["max"]
+                            return [hold[0], num]
                         return
-                    else:
-                        return prev_item
+                else:
+                    return prev_item
             return prev_item
 
         # Check inventory for same id
@@ -100,6 +101,40 @@ class Inventory():
                     loc[y][x] = slot
                     return
 
+    def update_craft(self):
+        valid = []
+        x1 = 0
+        x2 = 0
+        y1 = 0
+        y2 = 0
+        for row in self.craft:
+            for slot in row:
+                if x2 > row.index(slot):
+                    x2 = row.index(slot)
+                if y2 > row.index(slot):
+                    y2 = row.index(slot)
+
+        if len(valid) > 0:
+                grid = f"{x2 - x1 + 1}x{y2 - y1 + 1}"
+                combos = []
+                for key in self.craft_combos:
+                    if self.craft_combos[key]["grid"] == grid:
+                        combos.append(self.craft_combos[key])
+
+                craft_combo = []
+                for y in range(y1, y2 + 1):
+                    row = []
+                    for x in range(x1, x2 + 1):
+                        row.append(self.craft[y][x])
+                    craft_combo.append(row)
+
+                for combo in combos:
+                    if combo["combo"] == craft_combo:
+                        self.result = [int(combo.key()), combo["give"]]
+
+
+
+    # Draw Inventory
     def draw_inventory(self, screen, world):
         self.inv_rects = [[], [], [], [], [], []]
         self.craft_rects = [[], [], []]
