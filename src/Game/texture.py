@@ -17,6 +17,9 @@ BLOCK_TEXTURE_CACHE = {
     8: (160, 160, 160), # Gravel
     9: (0, 160, 0), # Leaves
     10: (90, 85, 58), # Wood
+    11: (140, 130, 120), # Wood Planks
+    12: (140, 120, 110), # Crafting Table
+    13: (168, 168, 168),  # Smooth Stone
     "Sprite_sheet" : None #spritesheet cache
 }
 
@@ -25,6 +28,7 @@ TOOL_TEXTURE_CACHE = {
     1: [(50, 0, 0), (100, 0, 0), (150, 0, 0), (200, 0, 0)], # Sword
     2: [(0, 50, 0), (0, 100, 0), (0, 150, 0), (0, 200, 0)], # Axe
     3: [(0, 0, 50), (0, 0, 100), (0, 0, 150), (0, 0, 200)], # Shovel
+    4: [(120, 100, 90)], # Stick
     "Sprite_sheet": None
 }
 
@@ -69,6 +73,9 @@ def __assign_blocks():
     BLOCK_TEXTURE_CACHE[8] = sheet.get_image(6)
     BLOCK_TEXTURE_CACHE[9] = sheet.get_image(7)
     BLOCK_TEXTURE_CACHE[10] = sheet.get_image(8)
+    BLOCK_TEXTURE_CACHE[11] = sheet.get_image(9)
+    BLOCK_TEXTURE_CACHE[12] = sheet.get_image(10)
+    BLOCK_TEXTURE_CACHE[13] = sheet.get_image(11)
 
 def __assign_tools():
     global TOOL_TEXTURE_CACHE
@@ -98,6 +105,9 @@ def __assign_tools():
     TOOL_TEXTURE_CACHE[3][1] = sheet.get_image(13)
     TOOL_TEXTURE_CACHE[3][2] = sheet.get_image(14)
     TOOL_TEXTURE_CACHE[3][3] = sheet.get_image(15)
+
+    # Stick
+    TOOL_TEXTURE_CACHE[4][0] = sheet.get_image(16)
 
 def load_image(path: str) -> pygame.Surface:
     """Load an image from disk with alpha support."""

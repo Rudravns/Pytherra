@@ -195,7 +195,6 @@ class Mouse():
                                 self.hold_tick += multiplier + dt
 
                             if self.hold_tick >= self.block_data[str(block_id)]["time"]:
-                                self.debug = (self.block_data[str(block_id)], block_id)
                                 self.remove_block(raw, player, world, block_id)
                                 self.hold_tick = 0
                         else:
@@ -364,22 +363,22 @@ class Mouse():
         if click[0] and self.hold_tick == 0: # Left Click
             self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
         elif click[2]: # Right Click
-            if self.hold == None:
+            if self.hold == None and self.hold_tick == 0:
                 self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
-                if not self.hold == None and self.hold_tick == None:
+                if not self.hold == None:
                     self.deposit = [self.hold[0], math.ceil(self.hold[1] / 2)]
                     self.hold[1] -= self.deposit[1]
                     if self.hold[1] == 0:
                         self.hold = None
                                     
-                    self.hold = player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
-            else:
+                    player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
+                    
+            elif not self.hold == None:
                 if math.floor(self.hold_tick) % 60 == 0:
                     if loc[a][b] == None or self.hold[0] == loc[a][b][0]:
                         self.deposit = [self.hold[0], 1]
-                        self.debug = (self.hold, self.deposit)
                         self.hold[1] -= self.deposit[1]
                         if self.hold[1] < 1:
                             self.hold = None
 
-                        self.hold = player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
+                        player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
