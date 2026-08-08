@@ -3,6 +3,8 @@ import pygame as pg
 import os, sys
 import random, time, threading
 
+# REMOVE THIS COMMENT WHEN EDITING THE CODE, I'M JUST DOING THIS SO I CAN PUSH TO MAIN
+
 # Player folder
 from Player import player
 # Controls folder
