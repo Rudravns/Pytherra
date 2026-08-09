@@ -262,9 +262,9 @@ class Mouse():
                             if not self.block_data[str(id)]["tool"] == None and not self.block_data[str(id)]["requirement"] == None:
                                 tool = self.determine_multiplier(self.block_data[str(id)]["tool"], player.inv.hotbar[player.inv.hold], give_type=True)
                                 if tool[0] == self.block_data[str(id)]["tool"] and tool[1] == self.block_data[str(id)]["requirement"]: #pyright: ignore
-                                    player.inv.update_inv(self.block_data, loc = player.inv.inventory, id=self.block_data[str(id)]["drop"])
+                                    player.inv.update_inv(self.block_data, loc = player.inv.inventory, hold=[self.block_data[str(id)]["drop"], 1])
                             else:
-                                player.inv.update_inv(self.block_data, loc = player.inv.inventory, id=self.block_data[str(id)]["drop"])
+                                player.inv.update_inv(self.block_data, loc = player.inv.inventory, hold=[self.block_data[str(id)]["drop"], 1])
                             
                             # Remember to modify this when silk touch support comes
                             del world.chunks[chunk][x % self.size][y]
@@ -345,6 +345,13 @@ class Mouse():
                     if curser_rect.colliderect(rect):
                         self.inv_collide(player, click, row, rect, "Craft")
 
+            if not player.inv.result_rect == None and self.hold == None:
+                if curser_rect.colliderect(player.inv.result_rect):
+                    if (click[0] or click[2]) and self.hold_tick == 0: # Left Click
+                        self.hold = player.inv.result
+                        player.inv.result = None
+                        player.inv.craft = player.inv.clear_craft()
+
             if click[0] or click[2]:
                 self.hold_tick += 1 + dt
             else:
@@ -361,17 +368,17 @@ class Mouse():
             loc = player.inv.craft
 
         if click[0] and self.hold_tick == 0: # Left Click
-            self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
+            self.hold = player.inv.update_inv(self.block_data, loc=loc, hold=self.hold, location=[a,b])
         elif click[2]: # Right Click
             if self.hold == None and self.hold_tick == 0:
-                self.hold = player.inv.update_inv(self.block_data, loc, hold=self.hold, location=[a,b])
+                self.hold = player.inv.update_inv(self.block_data, loc=loc, hold=self.hold, location=[a,b])
                 if not self.hold == None:
                     self.deposit = [self.hold[0], math.ceil(self.hold[1] / 2)]
                     self.hold[1] -= self.deposit[1]
                     if self.hold[1] == 0:
                         self.hold = None
                                     
-                    player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
+                    player.inv.update_inv(self.block_data, loc=loc, hold=self.deposit, location=[a,b])
                     
             elif not self.hold == None:
                 if math.floor(self.hold_tick) % 60 == 0:
@@ -381,4 +388,4 @@ class Mouse():
                         if self.hold[1] < 1:
                             self.hold = None
 
-                        player.inv.update_inv(self.block_data, loc, hold=self.deposit, location=[a,b])
+                        player.inv.update_inv(self.block_data, loc=loc, hold=self.deposit, location=[a,b])

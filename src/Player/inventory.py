@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygame as pg
 import json
 import math
@@ -16,14 +18,18 @@ class Inventory():
         self.hold = 0 # Location of hotbar
 
         #Crafting
-        self.craft = [[None, None, None], [None, None, None], [None, None, None]]
+        self.craft = self.clear_craft()
         self.craft_rects = [[], [], []]
         self.result = None
+        self.result_rect = None
         self.craft_combos = json.load(open("src/Jsons/combos.json", "r"))
 
         self.show_inv = False
 
         self.scroll = 0
+
+        #debug
+        self.debug = None
         
         # RENDERING
         self.COLORS = {
@@ -58,7 +64,7 @@ class Inventory():
         elif self.hold < 0:
             self.hold = 8
 
-    def update_inv(self, block_data: dict, loc: list, id: int = 0, hold: list[int, int] = None, location: tuple[int, int] = None): #pyright: ignore
+    def update_inv(self, block_data: dict, loc: list, hold: list[int, int], location: tuple[int, int] = None): #pyright: ignore
         # Check if using mouse in inventory
         if not location == None:
             prev_item = loc[location[0]][location[1]]
@@ -66,10 +72,11 @@ class Inventory():
             if not prev_item == None and not hold == None:
                 if prev_item[0] == hold[0]:
                     if prev_item[0] < 100 or hold[0] < 100: #Check if it's a block
-                        loc[location[0]][location[1]][1] += prev_item[1]
-                        if loc[location[0]][location[1]][1] > block_data[str(id)]["max"]:
-                            num = loc[location[0]][location[1]][1] - block_data[str(id)]["max"]
-                            loc[location[0]][location[1]][1] = block_data[str(id)]["max"]
+                        hold[1] += prev_item[1]
+                        if hold[1] > block_data[str(hold[0])]["max"]:
+                            num = hold[1] - block_data[str(hold[0])]["max"]
+                            hold[1] = block_data[str(hold[0])]["max"]
+                            loc[location[0]][location[1]] = hold
                             return [hold[0], num]
                         return
                 else:
@@ -81,13 +88,13 @@ class Inventory():
             for x in range(9): # Left to right
                 slot = loc[y][x]
                 if not slot == None:
-                    if id < 100:
-                        if slot[0] == id and slot[1] < block_data[str(id)]["max"]:
+                    if hold[0] < 100:
+                        if slot[0] == hold[0] and slot[1] < block_data[str(hold[0])]["max"]:
                             slot[1] += 1
                             loc[y][x] = slot
                             return
                     else:
-                        if slot[0] == id and slot[1] < 1:
+                        if slot[0] == hold[0] and slot[1] < 1:
                             slot[1] += 1
                             loc[y][x] = slot
                             return
@@ -97,40 +104,49 @@ class Inventory():
             for x in range(9): # Left to right
                 slot = loc[y][x]
                 if slot == None:
-                    slot = [id, 1]
+                    slot = [hold[0], 1]
                     loc[y][x] = slot
                     return
 
     def update_craft(self):
-        valid = []
-        x1 = 0
-        x2 = 0
-        y1 = 0
-        y2 = 0
-        for row in self.craft:
-            for slot in row:
-                if x2 > row.index(slot):
-                    x2 = row.index(slot)
-                if y2 > row.index(slot):
-                    y2 = row.index(slot)
+        x1 = -1
+        x2 = -1
+        y1 = -1
+        y2 = -1
+        for row in range(len(self.craft)):
+            for slot in range(len(self.craft[row])):
+                if not self.craft[row][slot] == None:
+                    if x1 > slot or x1 < 0:
+                        x1 = slot
+                    if x2 < slot or x2 < 0:
+                        x2 = slot
 
-        if len(valid) > 0:
-                grid = f"{x2 - x1 + 1}x{y2 - y1 + 1}"
-                combos = []
-                for key in self.craft_combos:
-                    if self.craft_combos[key]["grid"] == grid:
-                        combos.append(self.craft_combos[key])
+                    if y1 > row or y1 < 0:
+                        y1 = row
+                    if y2 < row or y2 < 0:
+                        y2 = row
 
-                craft_combo = []
-                for y in range(y1, y2 + 1):
-                    row = []
-                    for x in range(x1, x2 + 1):
-                        row.append(self.craft[y][x])
-                    craft_combo.append(row)
+        new_craft = []
+        for y in range(y1, y2 + 1):
+            row = []
+            for x in range(x1, x2 + 1):
+                row.append(self.craft[y][x][0] if not self.craft[y][x] == None else None) # pyright: ignore
+            new_craft.append(row)
+        
+        for combo_list in self.craft_combos:
+            for combo in self.craft_combos[combo_list]["combo"]:
+                if combo == new_craft:
+                    self.result = [int(combo_list), self.craft_combos[combo_list]["give"]]
+                    return
 
-                for combo in combos:
-                    if combo["combo"] == craft_combo:
-                        self.result = [int(combo.key()), combo["give"]]
+        self.result = None
+
+    def clear_craft(self):
+        craft = [[], [], []]
+        for y in range(3):
+            for x in range(3):
+                craft[y].append(None)
+        return craft
 
 
 
@@ -208,7 +224,7 @@ class Inventory():
 
 
             # Draw Crafting
-            x += (bar_size + gap) * 4
+            x += (bar_size + gap) * 3.5
             y -= (bar_size + gap) * 3 + size
 
             # Draw Background
@@ -219,6 +235,11 @@ class Inventory():
 
             draw_rect = pg.Rect(math.floor(rx1), math.floor(ry1), math.floor(rx2), math.floor(ry2))
             pg.draw.rect(screen, (200, 200, 200), draw_rect)
+            new_x = x + bar_size / 4
+            new_y = y + bar_size / 4
+            draw_rect = pg.Rect(math.floor(new_x), math.floor(new_y), math.floor(bar_size), math.floor(bar_size))
+            if not self.result == None:
+                self.draw_item(screen, world, draw_rect, bar_size, self.result)
 
             # Draw Items
             for i in range(3):
@@ -234,6 +255,19 @@ class Inventory():
 
                     if not self.craft[i][n] == None:
                         self.draw_item(screen, world, draw_rect, bar_size, self.craft[i][n])     
+
+            # Draw Result (Part of Crafting)
+            x += (bar_size + gap) * 4
+            y += bar_size + gap
+
+            draw_rect = pg.Rect(math.floor(x), math.floor(y), math.floor(bar_size), math.floor(bar_size))
+            pg.draw.rect(screen, (160, 160, 160), draw_rect)
+            pg.draw.rect(screen, (0, 0, 0), draw_rect, math.floor(2 * o))
+            if not self.result == None:
+                self.draw_item(screen, world, draw_rect, bar_size, self.result)
+                self.result_rect = draw_rect
+            else:
+                self.result_rect = None
 
     def draw_item(self, screen, world, draw_rect, bar_size, block):
         rect = pg.Rect(0, 0, math.floor(bar_size / 2), math.floor(bar_size / 2))

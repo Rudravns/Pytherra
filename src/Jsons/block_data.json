@@ -1,0 +1,167 @@
+{
+    "-1": {
+        "name": "Air",
+        "collidable": false,
+        "semicollidable": false,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": -1,
+        "max": 1
+    },
+    "0": {
+        "name": "Barrier",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": 0,
+        "max": 1
+    },
+    "1": {
+        "name": "Grass",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 2,
+        "max": 64
+    },
+    "2": {
+        "name": "Dirt",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 2,
+        "max": 64
+    },
+    "3": {
+        "name": "Stone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 600,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": 4,
+        "max" : 64
+    },
+    "4": {
+        "name": "Cobblestone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 700,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": 4,
+        "max": 64
+    },
+    "5": {
+        "name": "Snow",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 2,
+        "max": 16
+    },
+    "6": {
+        "name": "Sand",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 6,
+        "max": 64
+    },
+    "7": {
+        "name": "Water",
+        "collidable": false,
+        "semicollidable": true,
+        "breakable": false,
+        "time": -1,
+        "tool": null,
+        "requirement": null,
+        "drop": 7,
+        "max": 1
+    },
+    "8": {
+        "name": "Gravel",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 60,
+        "tool": "shovel",
+        "requirement": null,
+        "drop": 8,
+        "max": 64
+    },
+    "9": {
+        "name": "Leaves",
+        "collidable": false,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 20,
+        "tool": "shear",
+        "requirement": "iron",
+        "drop": 9,
+        "max": 64
+    },
+    "10": {
+        "name": "Wood",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 180,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 10,
+        "max": 64
+    },
+    "11": {
+        "name": "Wood Planks",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 200,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 11,
+        "max": 64        
+    },
+    "12": {
+        "name": "Crafting Table",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 200,
+        "tool": "axe",
+        "requirement": null,
+        "drop": 12,
+        "max": 64        
+    },
+    "13": {
+        "name": "Smooth Stone",
+        "collidable": true,
+        "semicollidable": false,
+        "breakable": true,
+        "time": 600,
+        "tool": "pickaxe",
+        "requirement": "wood",
+        "drop": 13,
+        "max": 64
+    }
+}

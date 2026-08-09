@@ -159,7 +159,11 @@ class pytherra:
 
         # Update mouse
         self.mouse.update(self.player, self.world, self.camera, buttons, self.dt)
-        
+
+        # Update craft
+        self.player.inv.update_craft()
+
+        # Update camera
         self.update_camera()
 
     def update_camera(self):
@@ -215,7 +219,6 @@ class pytherra:
 
 
 
-
     def debug_console(self):
         # \033[H moves the cursor to the top left.
         # \033[J clears the screen from the cursor down.
@@ -227,7 +230,7 @@ class pytherra:
         print(chunk, surface)
         if not self.mouse.debug == None: 
             print(self.mouse.debug)
-        print(self.player.debug)
+        print(self.player.inv.debug)
 
         # Flush stdout to ensure it prints immediately
         sys.stdout.flush()
