@@ -148,6 +148,10 @@ class Inventory():
                 craft[y].append(None)
         return craft
 
+    def toggle_inv(self):
+        #print("Toggling Inventory")
+        self.show_inv = not self.show_inv
+
 
 
     # Draw Inventory

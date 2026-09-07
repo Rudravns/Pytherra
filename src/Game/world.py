@@ -206,7 +206,7 @@ class World:
                             raw_data[chunk[local_x][by]] = []
                         dict_rects[chunk[local_x][by]].append(pg.Rect(bx * self.BLOCK_SIZE, by * self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE))
                         raw_data[chunk[local_x][by]].append((bx, by, chunk[local_x]))
-    
+
         return dict_rects, raw_data
 
     def draw(self, screen: pg.Surface, camera: pg.Vector2, debug: bool = False):

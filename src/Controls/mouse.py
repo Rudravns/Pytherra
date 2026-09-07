@@ -25,6 +25,8 @@ class Mouse():
         self.block_data = json.load(open("Jsons/block_data.json", "r"))
         self.hold = None
         self.deposit = None
+        self.last_block = [None, None]
+        self.place_tick = 60
 
         #debug
         self.debug = None
@@ -73,7 +75,9 @@ class Mouse():
             if button[0]: # Left click
                 self.left_click(player, world, dt)
             elif button[2]: # Right click
-                self.right_click(player, world)
+                self.right_click(player, world, dt)
+            else:
+                self.place_tick = 60
 
             if not button[0]:
                 self.hold_tick = 0
@@ -270,26 +274,40 @@ class Mouse():
                             del world.chunks[chunk][x % self.size][y]
                             break
 
-    def right_click(self, player, world):
-        rects, _ = world.get_nearby_rects(self.rect)
+    def right_click(self, player, world, dt):
+        if self.place_tick < 60:
+            self.place_tick += 1 + dt
+
+        rects, raw = world.get_nearby_rects(self.rect)
+        hold = player.inv.inventory[5][player.inv.hold]
         if len(rects) > 0:
             # Checks if you are colliding with something
             cont = False
             for _, rect_list in rects.items():
                 for w in rect_list:
                     # Checks if you are colliding with the player
-                    if self.rect.colliderect(player.rect) or self.rect.center == w.center: return
+                    if self.rect.colliderect(player.rect) or self.rect.center == w.center: 
+                        if 12 in rects.keys():
+                            for c in rects[12]:
+                                if w == c and self.place_tick >= 60:
+                                    player.inv.toggle_inv()
+
+                        return
 
                     x = abs(self.rect.x - w.x)
                     y = abs(self.rect.y - w.y)
                     dist = int(math.floor(math.sqrt((self.rect.x - w.x)**2 + (self.rect.y - w.y)**2)))
                     # Check if you are allowed to place a block
-                    if dist == 32: cont = True
+                    if dist == 32 and hold and hold[0] < 100: 
+                        cont = True
 
             if cont:
                 chunk = world.get_chunk_from_pos(self.pos.x)
                 x = chunk[1] % self.size
-                if not player.inv.inventory[5][player.inv.hold] == None:
+                if not hold == None:
+                    self.last_block = hold
+                    self.place_tick = 0
+
                     world.chunks[chunk[0]][x][self.pos.y // self.size] = player.inv.inventory[5][player.inv.hold][0]
                     player.inv.inventory[5][player.inv.hold][1] -= 1
                     if player.inv.inventory[5][player.inv.hold][1] == 0:

@@ -130,7 +130,7 @@ class pytherra:
                         self.player.inv.hold = 8
 
                     if event.key == pg.K_e:
-                        self.player.inv.show_inv = not self.player.inv.show_inv
+                        self.player.inv.toggle_inv() # Toggle inventory visibility
                         self.mouse.hold_tick = 0
                     
                 if event.type == pg.MOUSEWHEEL:
@@ -218,6 +218,7 @@ class pytherra:
         utils.draw_text(self.screen, f"{self.player.inv.result}", 40, (255, 255, 255), (10, 400))
 
 
+        
 
     def debug_console(self):
         # \033[H moves the cursor to the top left.
