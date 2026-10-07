@@ -13,9 +13,13 @@ from Controls import mouse
 from Game import world, loading, utils
 
 class pytherra:
-    def __init__(self, seed:int = None): # pyright: ignore[reportArgumentType]
+    def __init__(self, seed:int = None, desktop: pg.Vector2 = None): # pyright: ignore[reportArgumentType]
         pg.init()
         #os.system('cls' if os.name == 'nt' else "clear")
+
+        # Set the window position to the desktop coordinates
+        if desktop is not None: 
+            os.environ['SDL_VIDEO_WINDOW_POS'] = f"{int(desktop.x)},{int(desktop.y)}"
         
         # Screen setup
         self.screen = pg.display.set_mode((1000, 800), pg.RESIZABLE)
@@ -253,7 +257,7 @@ class pytherra:
         utils.cache.clear() # Clear the text cache to regenerate fonts with new sizes
 
 if __name__ == "__main__":
-    app = pytherra(0)
+    app = pytherra(0, pg.Vector2(600, 400))
     app.run()
     pg.quit()
     sys.exit()
